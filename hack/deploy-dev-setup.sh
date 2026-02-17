@@ -52,15 +52,15 @@ function _main() {
     0|f|false)
       "${_KUSTOMIZE}" build "${_PROJECT_DIR}/examples/dev-setup" | \
         "${_YQ}" \
-          'select(.kind == "ControllerDeployment" and .metadata.name == "gardener-extension-traefik").helm.values.image.repository |= strenv(IMAGE_REPO) |
-           select(.kind == "ControllerDeployment" and .metadata.name == "gardener-extension-traefik").helm.values.image.tag |= strenv(IMAGE_TAG)' | \
+          'select(.kind == "ControllerDeployment" and .metadata.name == "gardener-extension-shoot-traefik").helm.values.image.repository |= strenv(IMAGE_REPO) |
+           select(.kind == "ControllerDeployment" and .metadata.name == "gardener-extension-shoot-traefik").helm.values.image.tag |= strenv(IMAGE_TAG)' | \
              kubectl apply --server-side --force-conflicts=true -f -
       ;;
     1|t|true)
       "${_KUSTOMIZE}" build "${_PROJECT_DIR}/examples/operator-extension" | \
         "${_YQ}" \
-          'select(.kind == "Extension" and .metadata.name == "gardener-extension-traefik").spec.deployment.extension.values.image.repository |= strenv(IMAGE_REPO) |
-           select(.kind == "Extension" and .metadata.name == "gardener-extension-traefik").spec.deployment.extension.values.image.tag |= strenv(IMAGE_TAG)' | \
+          'select(.kind == "Extension" and .metadata.name == "gardener-extension-shoot-traefik").spec.deployment.extension.values.image.repository |= strenv(IMAGE_REPO) |
+           select(.kind == "Extension" and .metadata.name == "gardener-extension-shoot-traefik").spec.deployment.extension.values.image.tag |= strenv(IMAGE_TAG)' | \
              kubectl apply --server-side --force-conflicts=true -f -
       ;;
     *)

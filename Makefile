@@ -27,7 +27,7 @@ ifneq ($(strip $(shell git status --porcelain 2>/dev/null)),)
 endif
 
 # Name and version of the Gardener extension.
-EXTENSION_NAME ?= gardener-extension-traefik
+EXTENSION_NAME ?= gardener-extension-shoot-traefik
 EXTENSION_TYPE ?= traefik
 
 # Name for the extension image
@@ -93,7 +93,7 @@ $(1)
 
 endef
 
-##@ gardener-extension-traefik
+##@ gardener-extension-shoot-traefik
 
 .PHONY: help
 help: ## Display this help.

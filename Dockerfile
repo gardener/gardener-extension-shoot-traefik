@@ -30,14 +30,14 @@ ARG BUILD_DATE
 ARG VERSION
 ARG REVISION
 
-LABEL org.opencontainers.image.title="Gardener Extension Traefik"
+LABEL org.opencontainers.image.title="Gardener Extension Shoot Traefik"
 LABEL org.opencontainers.image.version="${VERSION}"
-LABEL org.opencontainers.image.description="A Gardener extension for Traefik"
-LABEL org.opencontainers.image.source="https://github.com/dnaeon/gardener-extension-traefik"
+LABEL org.opencontainers.image.description="A Gardener shoot extension for Traefik"
+LABEL org.opencontainers.image.source="https://github.com/gardener/gardener-extension-shoot-traefik"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${REVISION}"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
-LABEL org.opencontainers.image.authors="@gardener/gardener-extension-traefik-maintainers"
+LABEL org.opencontainers.image.authors="@gardener/gardener-extension-shoot-traefik-maintainers"
 
 WORKDIR /
 COPY --from=builder /workspace/bin/extension-traefik /usr/local/bin/extension-traefik

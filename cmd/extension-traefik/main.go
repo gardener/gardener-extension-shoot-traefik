@@ -11,13 +11,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
-	managercmd "gardener-extension-traefik/cmd/extension-traefik/internal/manager"
-	"gardener-extension-traefik/pkg/version"
+	managercmd "gardener-extension-shoot-traefik/cmd/extension-traefik/internal/manager"
+	"gardener-extension-shoot-traefik/pkg/version"
 )
 
 func main() {
 	app := &cli.Command{
-		Name:                  "gardener-extension-traefik",
+		Name:                  "gardener-extension-shoot-traefik",
 		Version:               version.Version,
 		EnableShellCompletion: true,
 		Usage:                 "traefik extension for Gardener",

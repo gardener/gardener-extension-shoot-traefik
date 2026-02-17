@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	"gardener-extension-traefik/pkg/webhook/shoot"
+	"gardener-extension-shoot-traefik/pkg/webhook/shoot"
 )
 
 const (

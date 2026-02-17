@@ -65,4 +65,4 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: false
-          tags: gardener-extension-traefik:latest
+          tags: gardener-extension-shoot-traefik:latest

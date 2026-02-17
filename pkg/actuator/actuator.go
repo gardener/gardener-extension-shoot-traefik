@@ -23,9 +23,9 @@ import (
 	"k8s.io/component-base/featuregate"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"gardener-extension-traefik/pkg/apis/config"
-	"gardener-extension-traefik/pkg/metrics"
-	"gardener-extension-traefik/pkg/traefik"
+	"gardener-extension-shoot-traefik/pkg/apis/config"
+	"gardener-extension-shoot-traefik/pkg/metrics"
+	"gardener-extension-shoot-traefik/pkg/traefik"
 )
 
 // ErrInvalidActuator is an error which is returned when creating an [Actuator]
@@ -43,7 +43,7 @@ const (
 	// actuator reconciles.
 	ExtensionType = "traefik"
 	// FinalizerSuffix is the finalizer suffix used by the actuator
-	FinalizerSuffix = "gardener-extension-traefik"
+	FinalizerSuffix = "gardener-extension-shoot-traefik"
 )
 
 // Actuator is an implementation of [extension.Actuator].

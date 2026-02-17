@@ -1,4 +1,4 @@
-module gardener-extension-traefik/internal/tools
+module gardener-extension-shoot-traefik/internal/tools
 
 go 1.25.3
 

@@ -1,6 +1,6 @@
-# gardener-extension-traefik
+# gardener-extension-shoot-traefik
 
-The `gardener-extension-traefik` deploys Traefik ingress controller to Gardener shoot clusters as a replacement for the nginx-ingress-controller which is out of maintenance.
+The `gardener-extension-shoot-traefik` deploys Traefik ingress controller to Gardener shoot clusters as a replacement for the nginx-ingress-controller which is out of maintenance.
 
 ## Features
 
@@ -84,7 +84,7 @@ command.
 make docker-build
 ```
 
-For local development of the `gardener-extension-traefik` it is recommended that
+For local development of the `gardener-extension-shoot-traefik` it is recommended that
 you setup a [development Gardener environment](https://gardener.cloud/docs/gardener/local_setup/).
 
 Please refer to the next sections for more information about deploying and
@@ -164,12 +164,12 @@ Verify that we have successfully created the `ControllerDeployment` and
 `ControllerRegistration` resources.
 
 ``` shell
-$ kubectl get controllerregistrations,controllerdeployments gardener-extension-traefik
-NAME                                                                    RESOURCES           AGE
-controllerregistration.core.gardener.cloud/gardener-extension-traefik   Extension/traefik   40s
+$ kubectl get controllerregistrations,controllerdeployments gardener-extension-shoot-traefik
+NAME                                                                          RESOURCES           AGE
+controllerregistration.core.gardener.cloud/gardener-extension-shoot-traefik   Extension/traefik   40s
 
-NAME                                                                  AGE
-controllerdeployment.core.gardener.cloud/gardener-extension-traefik   40s
+NAME                                                                        AGE
+controllerdeployment.core.gardener.cloud/gardener-extension-shoot-traefik   40s
 ```
 
 Finally, we can create an example shoot with our extension enabled. The
@@ -181,15 +181,15 @@ kubectl apply -f examples/shoot.yaml
 ```
 
 Once we create the shoot cluster, `gardenlet` will start deploying our
-`gardener-extension-traefik`, since it is required by our shoot.
+`gardener-extension-shoot-traefik`, since it is required by our shoot.
 
 Verify that the extension has been successfully installed by checking the
 corresponding `ControllerInstallation` resource.
 
 ``` shell
 $ kubectl get controllerinstallations.core.gardener.cloud
-NAME                               REGISTRATION                 SEED    VALID   INSTALLED   HEALTHY   PROGRESSING   AGE
-gardener-extension-traefik-tktwt   gardener-extension-traefik   local   True    True        True      False         103s
+NAME                                     REGISTRATION                       SEED    VALID   INSTALLED   HEALTHY   PROGRESSING   AGE
+gardener-extension-shoot-traefik-tktwt   gardener-extension-shoot-traefik   local   True    True        True      False         103s
 ```
 
 After your shoot cluster has been successfully created and reconciled, verify
@@ -268,9 +268,9 @@ Verify that we have successfully created the
 `Extension` (from group `operator.gardener.cloud/v1alpha1`) resource.
 
 ``` shell
-$ kubectl --kubeconfig $KUBECONFIG_RUNTIME get extop gardener-extension-traefik
-NAME                         INSTALLED   REQUIRED RUNTIME   REQUIRED VIRTUAL   AGE
-gardener-extension-traefik   True        False              False              85s
+$ kubectl --kubeconfig $KUBECONFIG_RUNTIME get extop gardener-extension-shoot-traefik
+NAME                               INSTALLED   REQUIRED RUNTIME   REQUIRED VIRTUAL   AGE
+gardener-extension-shoot-traefik   True        False              False              85s
 ```
 
 Verify that the respective `ControllerRegistration` and `ControllerDeployment`
@@ -278,12 +278,12 @@ resources have been created by the `gardener-operator` in the _virtual_ garden
 cluster.
 
 ``` shell
-> kubectl --kubeconfig $KUBECONFIG_VIRTUAL get controllerregistrations,controllerdeployments gardener-extension-traefik
-NAME                                                                    RESOURCES           AGE
-controllerregistration.core.gardener.cloud/gardener-extension-traefik   Extension/traefik   3m50s
+> kubectl --kubeconfig $KUBECONFIG_VIRTUAL get controllerregistrations,controllerdeployments gardener-extension-shoot-traefik
+NAME                                                                          RESOURCES           AGE
+controllerregistration.core.gardener.cloud/gardener-extension-shoot-traefik   Extension/traefik   3m50s
 
-NAME                                                                  AGE
-controllerdeployment.core.gardener.cloud/gardener-extension-traefik   3m50s
+NAME                                                                        AGE
+controllerdeployment.core.gardener.cloud/gardener-extension-shoot-traefik   3m50s
 ```
 
 Now we can create an example shoot with our extension enabled. The
@@ -295,15 +295,15 @@ kubectl --kubeconfig $KUBECONFIG_VIRTUAL apply -f examples/shoot.yaml
 ```
 
 Once we create the shoot cluster, `gardenlet` will start deploying our
-`gardener-extension-traefik`, since it is required by our shoot.
+`gardener-extension-shoot-traefik`, since it is required by our shoot.
 
 Verify that the extension has been successfully installed by checking the
 corresponding `ControllerInstallation` resource for our extension.
 
 ``` shell
 $ kubectl --kubeconfig $KUBECONFIG_VIRTUAL get controllerinstallations.core.gardener.cloud
-NAME                               REGISTRATION                 SEED    VALID   INSTALLED   HEALTHY   PROGRESSING   AGE
-gardener-extension-traefik-ng4r8   gardener-extension-traefik   local   True    True        True      False         2m9s
+NAME                                     REGISTRATION                       SEED    VALID   INSTALLED   HEALTHY   PROGRESSING   AGE
+gardener-extension-shoot-traefik-ng4r8   gardener-extension-shoot-traefik   local   True    True        True      False         2m9s
 ```
 
 After your shoot cluster has been successfully created and reconciled, verify
@@ -324,8 +324,8 @@ kubectl --kubeconfig $KUBECONFIG_RUNTIME --namespace shoot--local--local annotat
 
 # Contributing
 
-`gardener-extension-traefik` is hosted on
-[Github](https://github.com/dnaeon/gardener-extension-traefik).
+`gardener-extension-shoot-traefik` is hosted on
+[Github](https://github.com/gardener/gardener-extension-shoot-traefik).
 
 Please contribute by reporting issues, suggesting features or by sending patches
 using pull requests.

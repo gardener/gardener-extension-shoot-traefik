@@ -2,10 +2,10 @@
 apiVersion: core.gardener.cloud/v1
 kind: ControllerDeployment
 metadata:
-  name: gardener-extension-traefik
+  name: gardener-extension-shoot-traefik
 helm:
   ociRepository:
-    ref: registry.local.gardener.cloud:5001/helm-charts/gardener-extension-traefik:v0.1.0-dev
+    ref: registry.local.gardener.cloud:5001/helm-charts/gardener-extension-shoot-traefik:v0.1.0-dev
   values:
     webhook:
       enabled: true

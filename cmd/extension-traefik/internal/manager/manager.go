@@ -27,13 +27,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
-	extenimagev "gardener-extension-traefik/imagevector"
-	"gardener-extension-traefik/pkg/actuator"
-	configinstall "gardener-extension-traefik/pkg/apis/config/install"
-	"gardener-extension-traefik/pkg/controller"
-	"gardener-extension-traefik/pkg/heartbeat"
-	"gardener-extension-traefik/pkg/mgr"
-	"gardener-extension-traefik/pkg/webhook"
+	extenimagev "gardener-extension-shoot-traefik/imagevector"
+	"gardener-extension-shoot-traefik/pkg/actuator"
+	configinstall "gardener-extension-shoot-traefik/pkg/apis/config/install"
+	"gardener-extension-shoot-traefik/pkg/controller"
+	"gardener-extension-shoot-traefik/pkg/heartbeat"
+	"gardener-extension-shoot-traefik/pkg/mgr"
+	"gardener-extension-shoot-traefik/pkg/webhook"
 )
 
 // flags stores the manager flags as provided from the command-line
@@ -156,7 +156,7 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "extension-name",
 				Usage:       "name of the gardener extension",
-				Value:       "gardener-extension-traefik",
+				Value:       "gardener-extension-shoot-traefik",
 				Sources:     cli.EnvVars("EXTENSION_NAME"),
 				Destination: &flags.extensionName,
 			},
@@ -190,7 +190,7 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "heartbeat-namespace",
 				Usage:       "namespace to use for the heartbeat lease",
-				Value:       "gardener-extension-traefik",
+				Value:       "gardener-extension-shoot-traefik",
 				Sources:     cli.EnvVars("HEARTBEAT_NAMESPACE"),
 				Destination: &flags.heartbeatNamespace,
 			},
@@ -204,14 +204,14 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "leader-election-id",
 				Usage:       "the leader election id to use, if leader election is enabled",
-				Value:       "gardener-extension-traefik-leader-election",
+				Value:       "gardener-extension-shoot-traefik-leader-election",
 				Sources:     cli.EnvVars("LEADER_ELECTION_ID"),
 				Destination: &flags.leaderElectionID,
 			},
 			&cli.StringFlag{
 				Name:        "leader-election-namespace",
 				Usage:       "namespace to use for the leader election lease",
-				Value:       "gardener-extension-traefik",
+				Value:       "gardener-extension-shoot-traefik",
 				Sources:     cli.EnvVars("LEADER_ELECTION_NAMESPACE"),
 				Destination: &flags.leaderElectionNamespace,
 			},

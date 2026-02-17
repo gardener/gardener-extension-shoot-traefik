@@ -14,7 +14,7 @@ import (
 	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"gardener-extension-traefik/pkg/heartbeat"
+	"gardener-extension-shoot-traefik/pkg/heartbeat"
 )
 
 var _ = Describe("Heartbeat Controller", Ordered, func() {

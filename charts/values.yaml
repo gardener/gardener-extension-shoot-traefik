@@ -10,7 +10,7 @@ extension:
   #
   # Also, it will be used as the name for the Deployment, Service and
   # ServiceAccount resources.
-  name: gardener-extension-traefik
+  name: gardener-extension-shoot-traefik
   # Logging settings.
   logging:
     # Logging level. Valid values are `info', `debug' and `error'.
@@ -48,7 +48,7 @@ extension:
   # Leader election settings
   leader_election:
     enabled: true
-    election_id: gardener-extension-traefik-leader-election
+    election_id: gardener-extension-shoot-traefik-leader-election
 
 # Webhook configuration for admission validation
 webhook:
@@ -59,7 +59,7 @@ webhook:
   # Certificate directory for webhook TLS
   certDir: /tmp/k8s-webhook-server/serving-certs
   # Service name for the webhook
-  serviceName: gardener-extension-traefik-webhook
+  serviceName: gardener-extension-shoot-traefik-webhook
 
 # Extra values provided by gardenlet during extension deployment.
 #
@@ -90,7 +90,7 @@ serviceAccount:
 #
 # https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: docktofuture/gardener-extension-traefik
+  repository: docktofuture/gardener-extension-shoot-traefik
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.

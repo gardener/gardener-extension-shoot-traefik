@@ -6,7 +6,7 @@
 package v1alpha1
 
 import (
-	config "gardener-extension-traefik/pkg/apis/config"
+	config "gardener-extension-shoot-traefik/pkg/apis/config"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"

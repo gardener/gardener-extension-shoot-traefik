@@ -1,4 +1,4 @@
-module gardener-extension-traefik
+module gardener-extension-shoot-traefik
 
 go 1.25.0
 
