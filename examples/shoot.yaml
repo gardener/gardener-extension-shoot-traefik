@@ -20,10 +20,24 @@ spec:
         spec:
           # Optional: Custom Traefik image (if not specified, uses image from imagevector: docker.io/library/traefik:v3.6.7)
           # image: docker.io/library/traefik:v3.6.8
+          
           # Optional: Number of Traefik replicas
           replicas: 2
+          
           # Optional: Ingress class name (default: "traefik")
           ingressClass: traefik
+          
+          # Optional: Ingress provider type (default: "KubernetesIngress")
+          # Valid values:
+          # - "KubernetesIngress": Standard Kubernetes Ingress provider
+          # - "KubernetesIngressNGINX": NGINX-compatible provider with support for NGINX annotations
+          #
+          # Use KubernetesIngressNGINX when migrating from NGINX Ingress Controller to maintain
+          # compatibility with existing NGINX-specific annotations.
+          # ingressProvider: KubernetesIngress
+          #
+          # Example for NGINX-compatible mode:
+          # ingressProvider: KubernetesIngressNGINX
   cloudProfile:
     name: local
     kind: CloudProfile

@@ -226,6 +226,9 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 			if cfg.Spec.IngressClass != "" {
 				traefikConfig.IngressClass = cfg.Spec.IngressClass
 			}
+			if cfg.Spec.IngressProvider != "" {
+				traefikConfig.IngressProvider = cfg.Spec.IngressProvider
+			}
 		}
 	}
 

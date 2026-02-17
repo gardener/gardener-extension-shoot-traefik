@@ -8,6 +8,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// IngressProviderType defines the type of Kubernetes Ingress provider to use.
+type IngressProviderType string
+
+const (
+	// IngressProviderKubernetesIngress is the standard Kubernetes Ingress provider.
+	IngressProviderKubernetesIngress IngressProviderType = "KubernetesIngress"
+	// IngressProviderKubernetesIngressNGINX is the NGINX-compatible Kubernetes Ingress provider.
+	// This provider supports NGINX Ingress Controller annotations, making it easier to migrate
+	// from NGINX Ingress Controller to Traefik.
+	IngressProviderKubernetesIngressNGINX IngressProviderType = "KubernetesIngressNGINX"
+)
+
 // TraefikConfigSpec defines the desired state of [TraefikConfig]
 type TraefikConfigSpec struct {
 	// Image is the Traefik container image to use.
@@ -21,6 +33,15 @@ type TraefikConfigSpec struct {
 	// Defaults to "traefik" if not specified.
 	// This replaces the deprecated nginx ingress class.
 	IngressClass string `json:"ingressClass,omitempty"`
+
+	// IngressProvider specifies which Kubernetes Ingress provider to use.
+	// Valid values are:
+	// - "KubernetesIngress" (default): Standard Kubernetes Ingress provider
+	// - "KubernetesIngressNGINX": NGINX-compatible provider with support for NGINX annotations
+	//
+	// Use KubernetesIngressNGINX when migrating from NGINX Ingress Controller to maintain
+	// compatibility with existing NGINX-specific annotations.
+	IngressProvider IngressProviderType `json:"ingressProvider,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

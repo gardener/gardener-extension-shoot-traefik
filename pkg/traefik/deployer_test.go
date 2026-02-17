@@ -5,12 +5,15 @@
 package traefik
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"gardener-extension-shoot-traefik/pkg/apis/config"
 )
 
 func TestDeployment_ImageOverride(t *testing.T) {
@@ -114,4 +117,279 @@ func findSubstring(s, substr string) bool {
 	}
 
 	return false
+}
+
+func TestDeployment_IngressProvider(t *testing.T) {
+	tests := []struct {
+		name            string
+		ingressProvider config.IngressProviderType
+		ingressClass    string
+		expectedArgs    []string
+		notExpectedArgs []string
+	}{
+		{
+			name:            "KubernetesIngress provider",
+			ingressProvider: config.IngressProviderKubernetesIngress,
+			ingressClass:    "traefik",
+			expectedArgs: []string{
+				"--providers.kubernetesingress=true",
+				"--providers.kubernetesingress.ingressclass=traefik",
+			},
+			notExpectedArgs: []string{
+				"--providers.kubernetesingressnginx",
+			},
+		},
+		{
+			name:            "KubernetesIngressNGINX provider",
+			ingressProvider: config.IngressProviderKubernetesIngressNGINX,
+			ingressClass:    "nginx",
+			expectedArgs: []string{
+				"--providers.kubernetesingressnginx=true",
+				"--providers.kubernetesingressnginx.ingressclass=nginx",
+			},
+			notExpectedArgs: []string{
+				"--providers.kubernetesingress=true",
+				"--providers.kubernetesingress.ingressclass",
+			},
+		},
+		{
+			name:            "empty provider defaults to KubernetesIngress",
+			ingressProvider: "",
+			ingressClass:    "traefik",
+			expectedArgs: []string{
+				"--providers.kubernetesingress=true",
+				"--providers.kubernetesingress.ingressclass=traefik",
+			},
+			notExpectedArgs: []string{
+				"--providers.kubernetesingressnginx",
+			},
+		},
+		{
+			name:            "NGINX provider with custom class",
+			ingressProvider: config.IngressProviderKubernetesIngressNGINX,
+			ingressClass:    "custom-nginx",
+			expectedArgs: []string{
+				"--providers.kubernetesingressnginx=true",
+				"--providers.kubernetesingressnginx.ingressclass=custom-nginx",
+			},
+			notExpectedArgs: []string{
+				"--providers.kubernetesingress=true",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			imageVec := imagevector.ImageVector{
+				{
+					Name:       "traefik",
+					Repository: strPtr("docker.io/library/traefik"),
+					Tag:        strPtr("v3.6.7"),
+				},
+			}
+
+			config := Config{
+				Image:           "",
+				Replicas:        2,
+				IngressClass:    tt.ingressClass,
+				IngressProvider: tt.ingressProvider,
+			}
+
+			deployer := NewDeployer(client, logr.Discard(), config, imageVec)
+			deployment, err := deployer.deployment()
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if deployment == nil {
+				t.Fatal("expected deployment but got nil")
+			}
+
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+
+			// Check expected args are present
+			for _, expectedArg := range tt.expectedArgs {
+				found := false
+				for _, arg := range args {
+					if arg == expectedArg {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected arg %q not found in deployment args: %v", expectedArg, args)
+				}
+			}
+
+			// Check unexpected args are not present
+			for _, notExpectedArg := range tt.notExpectedArgs {
+				for _, arg := range args {
+					if strings.Contains(arg, notExpectedArg) {
+						t.Errorf("unexpected arg containing %q found in deployment args: %v", notExpectedArg, args)
+					}
+				}
+			}
+
+			// Verify common args are always present
+			commonArgs := []string{
+				"--api.insecure=false",
+				"--ping=true",
+				"--metrics.prometheus=true",
+				"--entrypoints.web.address=:8000",
+				"--entrypoints.websecure.address=:8443",
+			}
+			for _, commonArg := range commonArgs {
+				found := false
+				for _, arg := range args {
+					if arg == commonArg {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("common arg %q not found in deployment args: %v", commonArg, args)
+				}
+			}
+		})
+	}
+}
+
+func TestClusterRole_RBAC_Permissions(t *testing.T) {
+	tests := []struct {
+		name                 string
+		ingressProvider      config.IngressProviderType
+		expectNamespacePerms bool
+	}{
+		{
+			name:                 "KubernetesIngress provider - no namespace permissions",
+			ingressProvider:      config.IngressProviderKubernetesIngress,
+			expectNamespacePerms: false,
+		},
+		{
+			name:                 "KubernetesIngressNGINX provider - includes namespace permissions",
+			ingressProvider:      config.IngressProviderKubernetesIngressNGINX,
+			expectNamespacePerms: true,
+		},
+		{
+			name:                 "empty provider defaults to KubernetesIngress - no namespace permissions",
+			ingressProvider:      "",
+			expectNamespacePerms: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			config := Config{
+				Image:           "traefik:v3.6.7",
+				Replicas:        2,
+				IngressClass:    "traefik",
+				IngressProvider: tt.ingressProvider,
+			}
+
+			deployer := NewDeployer(client, logr.Discard(), config, nil)
+			clusterRole := deployer.clusterRole()
+
+			if clusterRole == nil {
+				t.Fatal("expected cluster role but got nil")
+			}
+
+			// Check for namespace permissions
+			hasNamespacePerms := false
+			for _, rule := range clusterRole.Rules {
+				for _, resource := range rule.Resources {
+					if resource == "namespaces" {
+						hasNamespacePerms = true
+						// Verify the permissions are correct
+						expectedVerbs := []string{"get", "list", "watch"}
+						for _, verb := range expectedVerbs {
+							found := false
+							for _, v := range rule.Verbs {
+								if v == verb {
+									found = true
+									break
+								}
+							}
+							if !found {
+								t.Errorf("expected verb %q for namespaces resource not found", verb)
+							}
+						}
+						break
+					}
+				}
+				if hasNamespacePerms {
+					break
+				}
+			}
+
+			if tt.expectNamespacePerms && !hasNamespacePerms {
+				t.Error("expected namespace permissions but they were not found")
+			}
+			if !tt.expectNamespacePerms && hasNamespacePerms {
+				t.Error("unexpected namespace permissions found")
+			}
+
+			// Verify common permissions are always present
+			commonResources := map[string][]string{
+				"services":       {"get", "list", "watch"},
+				"endpoints":      {"get", "list", "watch"},
+				"secrets":        {"get", "list", "watch"},
+				"ingresses":      {"get", "list", "watch"},
+				"ingressclasses": {"get", "list", "watch"},
+			}
+
+			for resource, expectedVerbs := range commonResources {
+				found := false
+				for _, rule := range clusterRole.Rules {
+					for _, res := range rule.Resources {
+						if res == resource {
+							found = true
+							for _, verb := range expectedVerbs {
+								verbFound := false
+								for _, v := range rule.Verbs {
+									if v == verb {
+										verbFound = true
+										break
+									}
+								}
+								if !verbFound {
+									t.Errorf("expected verb %q for resource %q not found", verb, resource)
+								}
+							}
+							break
+						}
+					}
+				}
+				if !found {
+					t.Errorf("expected resource %q not found in cluster role", resource)
+				}
+			}
+		})
+	}
+}
+
+func TestDefaultConfig(t *testing.T) {
+	defaultCfg := DefaultConfig()
+
+	if defaultCfg.Replicas != 2 {
+		t.Errorf("expected default replicas to be 2, got %d", defaultCfg.Replicas)
+	}
+
+	if defaultCfg.IngressClass != "traefik" {
+		t.Errorf("expected default ingress class to be 'traefik', got %q", defaultCfg.IngressClass)
+	}
+
+	if defaultCfg.IngressProvider != config.IngressProviderKubernetesIngress {
+		t.Errorf("expected default ingress provider to be 'KubernetesIngress', got %q", defaultCfg.IngressProvider)
+	}
+
+	if defaultCfg.Image != "" {
+		t.Errorf("expected default image to be empty, got %q", defaultCfg.Image)
+	}
 }

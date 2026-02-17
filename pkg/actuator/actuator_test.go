@@ -264,4 +264,130 @@ var _ = Describe("Actuator", Ordered, func() {
 		Expect(act).NotTo(BeNil())
 		Expect(act.Migrate(ctx, logger, extResource)).To(Succeed())
 	})
+
+	Context("IngressProvider Configuration", func() {
+		BeforeEach(func() {
+			// Update shoot to have purpose evaluation
+			shootWithPurpose := shoot.DeepCopy()
+			shootWithPurpose.Spec.Purpose = ptr.To(corev1beta1.ShootPurposeEvaluation)
+			shootWithPurposeData, err := json.Marshal(shootWithPurpose)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Update cluster with shoot that has evaluation purpose
+			cluster.Spec.Shoot.Raw = shootWithPurposeData
+			Expect(k8sClient.Update(ctx, cluster)).To(Succeed())
+		})
+
+		It("should use default KubernetesIngress provider when not specified", func() {
+			// Create config without IngressProvider field
+			cfg := config.TraefikConfig{
+				Spec: config.TraefikConfigSpec{
+					Image:        "traefik:v3.6.8",
+					Replicas:     2,
+					IngressClass: "traefik",
+					// IngressProvider not specified
+				},
+			}
+			cfgData, err := json.Marshal(cfg)
+			Expect(err).NotTo(HaveOccurred())
+
+			extResource.Spec.ProviderConfig = &runtime.RawExtension{
+				Raw: cfgData,
+			}
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+
+		It("should use KubernetesIngress provider when explicitly specified", func() {
+			cfg := config.TraefikConfig{
+				Spec: config.TraefikConfigSpec{
+					Image:           "traefik:v3.6.8",
+					Replicas:        2,
+					IngressClass:    "traefik",
+					IngressProvider: config.IngressProviderKubernetesIngress,
+				},
+			}
+			cfgData, err := json.Marshal(cfg)
+			Expect(err).NotTo(HaveOccurred())
+
+			extResource.Spec.ProviderConfig = &runtime.RawExtension{
+				Raw: cfgData,
+			}
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+
+		It("should use KubernetesIngressNGINX provider when specified", func() {
+			cfg := config.TraefikConfig{
+				Spec: config.TraefikConfigSpec{
+					Image:           "traefik:v3.6.8",
+					Replicas:        2,
+					IngressClass:    "nginx",
+					IngressProvider: config.IngressProviderKubernetesIngressNGINX,
+				},
+			}
+			cfgData, err := json.Marshal(cfg)
+			Expect(err).NotTo(HaveOccurred())
+
+			extResource.Spec.ProviderConfig = &runtime.RawExtension{
+				Raw: cfgData,
+			}
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+
+		It("should reconcile with all provider config options", func() {
+			cfg := config.TraefikConfig{
+				Spec: config.TraefikConfigSpec{
+					Image:           "custom.registry.io/traefik:v3.6.9",
+					Replicas:        3,
+					IngressClass:    "custom-traefik",
+					IngressProvider: config.IngressProviderKubernetesIngressNGINX,
+				},
+			}
+			cfgData, err := json.Marshal(cfg)
+			Expect(err).NotTo(HaveOccurred())
+
+			extResource.Spec.ProviderConfig = &runtime.RawExtension{
+				Raw: cfgData,
+			}
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+
+		It("should handle empty provider config gracefully", func() {
+			// No provider config at all - should use defaults
+			extResource.Spec.ProviderConfig = nil
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+
+		It("should handle invalid provider config gracefully and use defaults", func() {
+			// Invalid JSON in provider config
+			extResource.Spec.ProviderConfig = &runtime.RawExtension{
+				Raw: []byte(`{"invalid json`),
+			}
+
+			act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(act).NotTo(BeNil())
+			// Should not fail, but use defaults
+			Expect(act.Reconcile(ctx, logger, extResource)).To(Succeed())
+		})
+	})
 })

@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
+	"github.com/gardener/gardener/pkg/utils"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"gardener-extension-shoot-traefik/pkg/apis/config"
 )
 
 // Config holds the configuration for the Traefik deployment.
@@ -34,14 +37,17 @@ type Config struct {
 	Replicas int32
 	// IngressClass is the ingress class name that Traefik will handle.
 	IngressClass string
+	// IngressProvider specifies which Kubernetes Ingress provider to use.
+	IngressProvider config.IngressProviderType
 }
 
 // DefaultConfig returns the default configuration for Traefik.
 func DefaultConfig() Config {
 	return Config{
-		Image:        "", // Image will be resolved from image vector
-		Replicas:     2,
-		IngressClass: "traefik",
+		Image:           "", // Image will be resolved from image vector
+		Replicas:        2,
+		IngressClass:    "traefik",
+		IngressProvider: config.IngressProviderKubernetesIngress,
 	}
 }
 
@@ -81,11 +87,17 @@ func (d *Deployer) Deploy(ctx context.Context, namespace string) error {
 		return fmt.Errorf("failed to generate traefik resources: %w", err)
 	}
 
+	// Compute checksum of resources to ensure changes are detected
+	checksum := utils.ComputeSecretChecksum(resources)
+
 	// Create the secret containing the manifests
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ManagedResourceName,
 			Namespace: namespace,
+			Annotations: map[string]string{
+				"resources.gardener.cloud/data-checksum": checksum,
+			},
 		},
 		Type: corev1.SecretTypeOpaque,
 		Data: resources,
@@ -279,6 +291,43 @@ func (d *Deployer) serviceAccount() *corev1.ServiceAccount {
 }
 
 func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
+	rules := []rbacv1.PolicyRule{
+		{
+			APIGroups: []string{""},
+			Resources: []string{"services", "endpoints", "secrets", "nodes"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{"discovery.k8s.io"},
+			Resources: []string{"endpointslices"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{"extensions", "networking.k8s.io"},
+			Resources: []string{"ingresses", "ingressclasses"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{"extensions", "networking.k8s.io"},
+			Resources: []string{"ingresses/status"},
+			Verbs:     []string{"update"},
+		},
+		{
+			APIGroups: []string{"traefik.io"},
+			Resources: []string{"*"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+	}
+
+	// Add namespace permissions for NGINX provider when using namespace selectors
+	if d.config.IngressProvider == config.IngressProviderKubernetesIngressNGINX {
+		rules = append(rules, rbacv1.PolicyRule{
+			APIGroups: []string{""},
+			Resources: []string{"namespaces"},
+			Verbs:     []string{"get", "list", "watch"},
+		})
+	}
+
 	return &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -292,33 +341,7 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 				"app.kubernetes.io/managed-by": "gardener",
 			},
 		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"services", "endpoints", "secrets", "nodes"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"discovery.k8s.io"},
-				Resources: []string{"endpointslices"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"extensions", "networking.k8s.io"},
-				Resources: []string{"ingresses", "ingressclasses"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"extensions", "networking.k8s.io"},
-				Resources: []string{"ingresses/status"},
-				Verbs:     []string{"update"},
-			},
-			{
-				APIGroups: []string{"traefik.io"},
-				Resources: []string{"*"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-		},
+		Rules: rules,
 	}
 }
 
@@ -371,6 +394,38 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		image = img.String()
 	}
 
+	// Configure Traefik arguments based on the selected provider
+	args := []string{
+		"--api.insecure=false",
+		"--api.dashboard=false",
+		"--ping=true",
+		"--ping.entrypoint=web",
+		"--metrics.prometheus=true",
+		"--metrics.prometheus.entrypoint=metrics",
+		"--entrypoints.web.address=:8000",
+		"--entrypoints.websecure.address=:8443",
+		"--entrypoints.metrics.address=:9100",
+		"--log.level=INFO",
+	}
+
+	// Configure the appropriate Kubernetes Ingress provider
+	switch d.config.IngressProvider {
+	case config.IngressProviderKubernetesIngressNGINX:
+		// Enable NGINX-compatible Ingress provider for migration scenarios
+		args = append(args,
+			"--providers.kubernetesingressnginx=true",
+			fmt.Sprintf("--providers.kubernetesingressnginx.ingressclass=%s", d.config.IngressClass),
+		)
+	case config.IngressProviderKubernetesIngress:
+		fallthrough
+	default:
+		// Enable standard Kubernetes Ingress provider (default)
+		args = append(args,
+			"--providers.kubernetesingress=true",
+			fmt.Sprintf("--providers.kubernetesingress.ingressclass=%s", d.config.IngressClass),
+		)
+	}
+
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -409,20 +464,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 						{
 							Name:  "traefik",
 							Image: image,
-							Args: []string{
-								"--api.insecure=false",
-								"--api.dashboard=false",
-								"--ping=true",
-								"--ping.entrypoint=web",
-								"--metrics.prometheus=true",
-								"--metrics.prometheus.entrypoint=metrics",
-								"--entrypoints.web.address=:8000",
-								"--entrypoints.websecure.address=:8443",
-								"--entrypoints.metrics.address=:9100",
-								"--providers.kubernetesingress=true",
-								fmt.Sprintf("--providers.kubernetesingress.ingressclass=%s", d.config.IngressClass),
-								"--log.level=INFO",
-							},
+							Args:  args,
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",

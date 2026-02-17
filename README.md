@@ -47,6 +47,11 @@ spec:
           replicas: 2
           # Optional: Ingress class name (default: traefik)
           ingressClass: traefik
+          # Optional: Ingress provider type (default: KubernetesIngress)
+          # Valid values:
+          # - KubernetesIngress: Standard Kubernetes Ingress provider
+          # - KubernetesIngressNGINX: NGINX-compatible provider with NGINX annotation support
+          ingressProvider: KubernetesIngress
   # ... rest of your shoot configuration
 ```
 
@@ -57,6 +62,39 @@ spec:
 | `spec.image` | string | `traefik:v3.6.8` | Traefik container image |
 | `spec.replicas` | int32 | `2` | Number of Traefik replicas |
 | `spec.ingressClass` | string | `traefik` | Ingress class name that Traefik handles |
+| `spec.ingressProvider` | string | `KubernetesIngress` | Kubernetes Ingress provider type: `KubernetesIngress` or `KubernetesIngressNGINX` |
+
+### Ingress Provider Types
+
+The extension supports two Kubernetes Ingress provider types:
+
+#### KubernetesIngress (Default)
+
+The standard Kubernetes Ingress provider that implements the core [Kubernetes Ingress specification](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+
+```yaml
+spec:
+  ingressProvider: KubernetesIngress
+```
+
+#### KubernetesIngressNGINX
+
+The NGINX-compatible provider that supports [NGINX Ingress Controller annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/), making it easier to migrate from NGINX Ingress Controller to Traefik with minimal configuration changes.
+
+```yaml
+spec:
+  ingressProvider: KubernetesIngressNGINX
+```
+
+**When to use KubernetesIngressNGINX:**
+- You're migrating from NGINX Ingress Controller
+- Your existing Ingress resources use NGINX-specific annotations
+- You want to maintain compatibility with NGINX annotations during the transition
+
+For more information, see:
+- [Traefik Kubernetes Ingress Documentation](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress/)
+- [Traefik NGINX Annotations Support](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx/)
+- [NGINX to Traefik Migration Guide](https://doc.traefik.io/traefik/migrate/nginx-to-traefik/)
 
 ### Why Traefik?
 
