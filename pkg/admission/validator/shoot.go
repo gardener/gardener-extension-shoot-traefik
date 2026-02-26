@@ -40,6 +40,7 @@ func NewShootValidatorWebhook(mgr manager.Manager) (*extensionswebhook.Webhook, 
 		Provider: ExtensionType,
 		Name:     Name,
 		Path:     "/webhooks/validate-shoot-traefik",
+		Target:   extensionswebhook.TargetSeed,
 		Validators: map[extensionswebhook.Validator][]extensionswebhook.Type{
 			NewShootValidator(mgr.GetClient(), decoder): {
 				{Obj: &gardencorev1beta1.Shoot{}},
@@ -57,10 +58,10 @@ func NewShootValidator(c client.Client, decoder runtime.Decoder) extensionswebho
 }
 
 // Validate validates the given object (Shoot) on create and update operations.
-func (v *shootValidator) Validate(ctx context.Context, new, old client.Object) error {
-	shoot, ok := new.(*gardencorev1beta1.Shoot)
+func (v *shootValidator) Validate(ctx context.Context, newClient, old client.Object) error {
+	shoot, ok := newClient.(*gardencorev1beta1.Shoot)
 	if !ok {
-		return fmt.Errorf("expected *gardencorev1beta1.Shoot but got %T", new)
+		return fmt.Errorf("expected *gardencorev1beta1.Shoot but got %T", newClient)
 	}
 
 	return v.validateShoot(shoot)
@@ -74,6 +75,7 @@ func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
 	for _, ext := range shoot.Spec.Extensions {
 		if ext.Type == ExtensionType {
 			hasTraefikExtension = true
+
 			break
 		}
 	}
@@ -91,7 +93,7 @@ func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
 		}
 
 		return fmt.Errorf(
-			"Traefik extension can only be enabled for shoots with purpose 'evaluation'. "+
+			"traefik extension can only be enabled for shoots with purpose 'evaluation'. "+
 				"Current purpose: %s. Traefik acts as a replacement for the nginx ingress controller "+
 				"and is only supported for evaluation clusters",
 			purposeStr,
