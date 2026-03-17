@@ -60,7 +60,6 @@ spec:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec.image` | string | `traefik:v3.6.10` | Traefik container image |
 | `spec.replicas` | int32 | `2` | Number of Traefik replicas |
 | `spec.ingressClass` | string | `traefik` | Ingress class name that Traefik handles |
 | `spec.logLevel` | string | `INFO` | Traefik log level: `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`, `PANIC` |
