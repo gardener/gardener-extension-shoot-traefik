@@ -15,8 +15,8 @@ import (
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
 	extensionsutil "github.com/gardener/gardener/extensions/pkg/util"
+	v1beta1helper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils/gardener"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -369,10 +369,10 @@ func (a *Actuator) Delete(ctx context.Context, logger logr.Logger, ex *extension
 		return fmt.Errorf("failed to delete traefik ingress DNS record: %w", err)
 	}
 
-	// Delete the shoot ManagedResource with keepObjects=false. The shoot
-	// kube-apiserver is still running at this point (delete: BeforeKubeAPIServer),
-	// so resource-manager can cleanly remove Traefik from the shoot cluster.
-	if err := deployer.Delete(ctx, clusterName, false); err != nil {
+	// Delete the shoot ManagedResource. The shoot kube-apiserver is still
+	// running at this point (delete: BeforeKubeAPIServer), so resource-manager
+	// can cleanly remove Traefik from the shoot cluster.
+	if err := deployer.Delete(ctx, clusterName); err != nil {
 		return fmt.Errorf("failed to delete traefik: %w", err)
 	}
 
@@ -405,9 +405,9 @@ func (a *Actuator) ForceDelete(ctx context.Context, logger logr.Logger, ex *exte
 		logger.Error(err, "failed to delete traefik ingress DNS record during force-delete", "cluster", clusterName)
 	}
 
-	// Delete shoot ManagedResource with keepObjects=true because the shoot
+	// Delete shoot ManagedResource keeping objects because the shoot
 	// API server is unreachable during force-delete.
-	if err := deployer.Delete(ctx, clusterName, true); err != nil {
+	if err := deployer.DeleteKeepingObjects(ctx, clusterName); err != nil {
 		return fmt.Errorf("failed to force-delete traefik: %w", err)
 	}
 
@@ -450,7 +450,7 @@ func (a *Actuator) Migrate(ctx context.Context, logger logr.Logger, ex *extensio
 
 	// Keep shoot objects alive (traefik keeps running in the shoot) and only
 	// remove the ManagedResource from the old seed.
-	if err := deployer.Delete(ctx, clusterName, true); err != nil {
+	if err := deployer.DeleteKeepingObjects(ctx, clusterName); err != nil {
 		return fmt.Errorf("failed to delete traefik managed resource during migrate: %w", err)
 	}
 

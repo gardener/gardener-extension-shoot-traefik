@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"time"
 
+	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/api/extensions/v1alpha1/helper"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -161,26 +161,31 @@ func (d *Deployer) Deploy(ctx context.Context, namespace string) error {
 
 // Delete removes Traefik from the shoot cluster.
 //
-// When keepObjects is true the ManagedResource is patched so that
-// gardener-resource-manager skips shoot-cluster cleanup and removes its
-// finalizer immediately. This is required during force-delete or migrate
-// because the shoot API server may already be unreachable.
-//
-// When keepObjects is false (normal deletion) the resources are deleted
-// from the shoot cluster before the ManagedResource itself is removed.
+// The resources are deleted from the shoot cluster before the ManagedResource
+// itself is removed. Use this for normal deletion where the shoot API server
+// is still reachable.
 //
 // The caller MUST NOT return before this function completes: gardenlet's
 // "Waiting until shoot managed resources have been deleted" task lists every
 // shoot-class (no-class) ManagedResource in the shoot namespace and will time
 // out if extension-traefik still exists when that check runs.
-func (d *Deployer) Delete(ctx context.Context, namespace string, keepObjects bool) error {
-	d.logger.Info("deleting traefik from shoot cluster", "namespace", namespace, "keepObjects", keepObjects)
+func (d *Deployer) Delete(ctx context.Context, namespace string) error {
+	return d.deleteManagedResource(ctx, namespace)
+}
 
-	if keepObjects {
-		if err := managedresources.SetKeepObjects(ctx, d.client, namespace, ManagedResourceName, true); client.IgnoreNotFound(err) != nil {
-			return fmt.Errorf("failed to set keepObjects on managed resource: %w", err)
-		}
+// DeleteKeepingObjects removes the ManagedResource without deleting the
+// underlying shoot-cluster objects. Use this during force-delete or migrate
+// where the shoot API server may already be unreachable.
+func (d *Deployer) DeleteKeepingObjects(ctx context.Context, namespace string) error {
+	if err := managedresources.SetKeepObjects(ctx, d.client, namespace, ManagedResourceName, true); client.IgnoreNotFound(err) != nil {
+		return fmt.Errorf("failed to set keepObjects on managed resource: %w", err)
 	}
+
+	return d.deleteManagedResource(ctx, namespace)
+}
+
+func (d *Deployer) deleteManagedResource(ctx context.Context, namespace string) error {
+	d.logger.Info("deleting traefik from shoot cluster", "namespace", namespace)
 
 	managedResource := &resourcesv1alpha1.ManagedResource{
 		ObjectMeta: metav1.ObjectMeta{
