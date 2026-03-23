@@ -79,7 +79,7 @@ serviceAccount:
 #
 # https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: docktofuture/gardener-extension-shoot-traefik
+  repository: europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/gardener-extension-shoot-traefik
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
