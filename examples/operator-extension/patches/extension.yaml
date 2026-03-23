@@ -30,6 +30,6 @@ spec:
     clusterCompatibility:
     - shoot
     lifecycle:
-      reconcile: BeforeKubeAPIServer
-      delete: AfterKubeAPIServer
+      reconcile: AfterKubeAPIServer
+      delete: BeforeKubeAPIServer
       migrate: AfterKubeAPIServer
