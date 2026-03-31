@@ -51,6 +51,9 @@ spec:
           # - KubernetesIngress: Standard Kubernetes Ingress provider (ingress class: "traefik")
           # - KubernetesIngressNGINX: NGINX-compatible provider with NGINX annotation support (ingress class: "nginx")
           ingressProvider: KubernetesIngress
+          # Optional: Enable the Traefik API and dashboard (default: false)
+          # WARNING: Not recommended for production — see Dashboard section below.
+          dashboard: false
   # ... rest of your shoot configuration
 ```
 
@@ -61,6 +64,7 @@ spec:
 | `spec.replicas` | int32 | `2` | Number of Traefik replicas |
 | `spec.logLevel` | string | `INFO` | Traefik log level: `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`, `PANIC` |
 | `spec.ingressProvider` | string | `KubernetesIngress` | Kubernetes Ingress provider type: `KubernetesIngress` or `KubernetesIngressNGINX` |
+| `spec.dashboard` | bool | `false` | Enable the Traefik API and dashboard (not recommended for production) |
 
 ### Ingress Provider Types
 
@@ -95,6 +99,25 @@ For more information, see:
 - [Traefik Kubernetes Ingress Documentation](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress/)
 - [Traefik NGINX Annotations Support](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx/)
 - [NGINX to Traefik Migration Guide](https://doc.traefik.io/traefik/migrate/nginx-to-traefik/)
+
+### Traefik Dashboard
+
+> **Warning:** Enabling the API and the dashboard in production is not recommended, because it will expose all configuration elements, including sensitive data, for which access should be reserved to administrators.
+
+The Traefik dashboard is disabled by default. To enable it, set `spec.dashboard: true` in the provider config:
+
+```yaml
+spec:
+  dashboard: true
+```
+
+Once the shoot is reconciled, you can access the dashboard by port-forwarding to the Traefik deployment on the shoot cluster:
+
+```bash
+kubectl -n kube-system port-forward deployment/traefik 9000:9000
+```
+
+Then open `http://localhost:9000/dashboard/` in your browser (the trailing `/` is required).
 
 ## Development
 

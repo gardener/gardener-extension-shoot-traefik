@@ -39,6 +39,13 @@ type TraefikConfigSpec struct {
 	// Valid values are: DEBUG, INFO, WARN, ERROR, FATAL, PANIC
 	// Defaults to "INFO" if not specified.
 	LogLevel string `json:"logLevel,omitempty"`
+
+	// Dashboard enables the Traefik dashboard.
+	// The dashboard is exposed on port 9000 and accessible via port-forwarding.
+	// Enabling the API and the dashboard in production is not recommended, because it will expose all
+	// configuration elements, including sensitive data, for which access should be reserved to administrators.
+	// Defaults to false if not specified.
+	Dashboard bool `json:"dashboard,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

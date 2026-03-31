@@ -45,5 +45,6 @@ _Appears in:_
 | `replicas` _integer_ | Replicas is the number of Traefik replicas to deploy.<br />Defaults to 2 if not specified. |  |  |
 | `ingressProvider` _[IngressProviderType](#ingressprovidertype)_ | IngressProvider specifies which Kubernetes Ingress provider to use.<br />Valid values are:<br />- "KubernetesIngress" (default): Standard Kubernetes Ingress provider<br />- "KubernetesIngressNGINX": NGINX-compatible provider with support for NGINX annotations<br />Use KubernetesIngressNGINX when migrating from NGINX Ingress Controller to maintain<br />compatibility with existing NGINX-specific annotations. |  |  |
 | `logLevel` _string_ | LogLevel sets the Traefik log level.<br />Valid values are: DEBUG, INFO, WARN, ERROR, FATAL, PANIC<br />Defaults to "INFO" if not specified. |  |  |
+| `dashboard` _boolean_ | Dashboard enables the Traefik dashboard.<br />The dashboard is exposed on port 9000 and accessible via port-forwarding.<br />Enabling the API and the dashboard in production is not recommended, because it will expose all<br />configuration elements, including sensitive data, for which access should be reserved to administrators.<br />Defaults to false if not specified. |  |  |
 
 

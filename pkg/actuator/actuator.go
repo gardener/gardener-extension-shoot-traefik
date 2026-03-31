@@ -239,6 +239,7 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 				}
 				traefikConfig.LogLevel = cfg.Spec.LogLevel
 			}
+			traefikConfig.Dashboard = cfg.Spec.Dashboard
 		}
 	}
 

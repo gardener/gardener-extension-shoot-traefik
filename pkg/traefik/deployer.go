@@ -90,6 +90,8 @@ type Config struct {
 	IngressProvider config.IngressProviderType
 	// LogLevel sets the Traefik log level.
 	LogLevel string
+	// Dashboard enables the Traefik dashboard on port 9000.
+	Dashboard bool
 }
 
 // DefaultConfig returns the default configuration for Traefik.
@@ -556,8 +558,8 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 
 	// Configure Traefik arguments based on the selected provider
 	args := []string{
-		"--api.insecure=false",
-		"--api.dashboard=false",
+		fmt.Sprintf("--api.insecure=%t", d.config.Dashboard),
+		fmt.Sprintf("--api.dashboard=%t", d.config.Dashboard),
 		"--ping=true",
 		"--ping.entrypoint=web",
 		"--metrics.prometheus=true",
@@ -566,6 +568,10 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		"--entrypoints.websecure.address=:8443",
 		"--entrypoints.metrics.address=:9100",
 		fmt.Sprintf("--log.level=%s", d.config.LogLevel),
+	}
+
+	if d.config.Dashboard {
+		args = append(args, "--entrypoints.traefik.address=:9000")
 	}
 
 	ingressClass := d.config.IngressClassName()
@@ -585,6 +591,31 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 			fmt.Sprintf("--providers.kubernetesingressnginx.ingressclass=%s", ingressClass),
 			"--providers.kubernetesingressnginx.publishservice=kube-system/traefik",
 		)
+	}
+
+	ports := []corev1.ContainerPort{
+		{
+			Name:          "web",
+			ContainerPort: 8000,
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			Name:          "websecure",
+			ContainerPort: 8443,
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			Name:          "metrics",
+			ContainerPort: 9100,
+			Protocol:      corev1.ProtocolTCP,
+		},
+	}
+	if d.config.Dashboard {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          "traefik",
+			ContainerPort: 9000,
+			Protocol:      corev1.ProtocolTCP,
+		})
 	}
 
 	return &appsv1.Deployment{
@@ -626,23 +657,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 							Name:  "traefik",
 							Image: image,
 							Args:  args,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "web",
-									ContainerPort: 8000,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								{
-									Name:          "websecure",
-									ContainerPort: 8443,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								{
-									Name:          "metrics",
-									ContainerPort: 9100,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
+							Ports: ports,
 							StartupProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{

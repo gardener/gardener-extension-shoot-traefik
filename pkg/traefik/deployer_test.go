@@ -280,6 +280,102 @@ func TestDeployment_LogLevel(t *testing.T) {
 	}
 }
 
+func TestDeployment_Dashboard(t *testing.T) {
+	tests := []struct {
+		name            string
+		dashboard       bool
+		expectedArgs    []string
+		notExpectedArgs []string
+		expectPort      bool
+	}{
+		{
+			name:      "dashboard disabled by default",
+			dashboard: false,
+			expectedArgs: []string{
+				"--api.insecure=false",
+				"--api.dashboard=false",
+			},
+			notExpectedArgs: []string{
+				"--entrypoints.traefik.address=:9000",
+			},
+			expectPort: false,
+		},
+		{
+			name:      "dashboard enabled",
+			dashboard: true,
+			expectedArgs: []string{
+				"--api.insecure=true",
+				"--api.dashboard=true",
+				"--entrypoints.traefik.address=:9000",
+			},
+			notExpectedArgs: []string{
+				"--api.insecure=false",
+				"--api.dashboard=false",
+			},
+			expectPort: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			imageVec := imagevector.ImageVector{
+				{
+					Name:       "traefik",
+					Repository: new("docker.io/library/traefik"),
+					Tag:        new("v3.6.10"),
+				},
+			}
+
+			config := Config{
+				Replicas:  2,
+				Dashboard: tt.dashboard,
+			}
+
+			deployer := NewDeployer(client, logr.Discard(), config, imageVec)
+			deployment, err := deployer.deployment()
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+
+			for _, expectedArg := range tt.expectedArgs {
+				if !slices.Contains(args, expectedArg) {
+					t.Errorf("expected arg %q not found in deployment args: %v", expectedArg, args)
+				}
+			}
+
+			for _, notExpectedArg := range tt.notExpectedArgs {
+				if slices.Contains(args, notExpectedArg) {
+					t.Errorf("unexpected arg %q found in deployment args: %v", notExpectedArg, args)
+				}
+			}
+
+			// Check for dashboard port
+			ports := deployment.Spec.Template.Spec.Containers[0].Ports
+			hasDashboardPort := false
+			for _, p := range ports {
+				if p.Name == DeploymentName && p.ContainerPort == 9000 {
+					hasDashboardPort = true
+
+					break
+				}
+			}
+
+			if tt.expectPort && !hasDashboardPort {
+				t.Error("expected dashboard port (traefik:9000) but it was not found")
+			}
+			if !tt.expectPort && hasDashboardPort {
+				t.Error("unexpected dashboard port (traefik:9000) found")
+			}
+		})
+	}
+}
+
 func TestClusterRole_RBAC_Permissions(t *testing.T) {
 	tests := []struct {
 		name                 string
