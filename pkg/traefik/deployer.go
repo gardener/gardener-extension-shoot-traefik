@@ -11,8 +11,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"time"
 
 	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/api/extensions/v1alpha1/helper"
@@ -374,9 +376,7 @@ func (d *Deployer) generateResources() (map[string][]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to split traefik CRDs: %w", err)
 	}
-	for name, data := range crds {
-		resources[name] = data
-	}
+	maps.Copy(resources, crds)
 
 	return resources, nil
 }
@@ -410,7 +410,7 @@ func splitCRDs(raw []byte) (map[string][]byte, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, fmt.Errorf("no CRDs found in embedded YAML")
+		return nil, errors.New("no CRDs found in embedded YAML")
 	}
 
 	return result, nil

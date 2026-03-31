@@ -111,11 +111,11 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 				Name: cloudProfileName,
 				Kind: cloudProfileKind,
 			},
-			CredentialsBindingName: ptr.To(credentialsBinding),
+			CredentialsBindingName: new(credentialsBinding),
 			Region:                 region,
 			Networking: &gardencorev1beta1.Networking{
-				Type:  ptr.To(networkingType),
-				Nodes: ptr.To(nodesCIDR),
+				Type:  new(networkingType),
+				Nodes: new(nodesCIDR),
 			},
 			Provider: gardencorev1beta1.Provider{
 				Type: providerType,
@@ -138,10 +138,10 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 				{
 					Type: "traefik",
 					ProviderConfig: &runtime.RawExtension{
-						Raw: mustMarshalJSON(map[string]interface{}{
+						Raw: mustMarshalJSON(map[string]any{
 							"apiVersion": "traefik.extensions.gardener.cloud/v1alpha1",
 							"kind":       "TraefikConfig",
-							"spec": map[string]interface{}{
+							"spec": map[string]any{
 								"replicas":        2,
 								"ingressProvider": ingressProvider,
 							},
@@ -158,7 +158,7 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 			VolumeSize: workerVolumeSize,
 		}
 		if workerVolumeType != "" {
-			shoot.Spec.Provider.Workers[0].Volume.Type = ptr.To(workerVolumeType)
+			shoot.Spec.Provider.Workers[0].Volume.Type = new(workerVolumeType)
 		}
 	}
 
@@ -177,19 +177,19 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 			Raw: []byte(infrastructureConfig),
 		}
 	} else if providerType == "aws" {
-		infra := map[string]interface{}{
+		infra := map[string]any{
 			"apiVersion": "aws.provider.extensions.gardener.cloud/v1alpha1",
 			"kind":       "InfrastructureConfig",
-			"networks": map[string]interface{}{
-				"vpc": map[string]interface{}{
+			"networks": map[string]any{
+				"vpc": map[string]any{
 					"cidr": vpcCIDR,
 				},
 			},
 		}
 		// AWS requires at least one zone with subnet CIDRs when a zone is given.
 		if workerZone != "" {
-			networks := infra["networks"].(map[string]interface{})
-			networks["zones"] = []map[string]interface{}{
+			networks := infra["networks"].(map[string]any)
+			networks["zones"] = []map[string]any{
 				{
 					"name":     workerZone,
 					"workers":  workerZoneWorkersCIDR,
@@ -203,10 +203,10 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 		}
 		// AWS also requires a ControlPlaneConfig.
 		shoot.Spec.Provider.ControlPlaneConfig = &runtime.RawExtension{
-			Raw: mustMarshalJSON(map[string]interface{}{
+			Raw: mustMarshalJSON(map[string]any{
 				"apiVersion": "aws.provider.extensions.gardener.cloud/v1alpha1",
 				"kind":       "ControlPlaneConfig",
-				"loadBalancerController": map[string]interface{}{
+				"loadBalancerController": map[string]any{
 					"enabled": false,
 				},
 			}),
@@ -223,7 +223,7 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 	// Apply DNS domain if specified.
 	if shootDomain != "" {
 		shoot.Spec.DNS = &gardencorev1beta1.DNS{
-			Domain: ptr.To(fmt.Sprintf("%s.%s", name, shootDomain)),
+			Domain: new(fmt.Sprintf("%s.%s", name, shootDomain)),
 		}
 	}
 
@@ -435,7 +435,7 @@ func createIngress(ctx context.Context, shootClient client.Client, serviceName, 
 			Namespace: testNamespace,
 		},
 		Spec: networkingv1.IngressSpec{
-			IngressClassName: ptr.To(ingressClassName),
+			IngressClassName: new(ingressClassName),
 			Rules: []networkingv1.IngressRule{
 				{
 					// Use a wildcard / empty host so the test works with plain IP access.
@@ -462,6 +462,7 @@ func createIngress(ctx context.Context, shootClient client.Client, serviceName, 
 		},
 	}
 	Expect(shootClient.Create(ctx, ingress)).To(Succeed(), "failed to create ingress")
+
 	return ingress
 }
 
@@ -523,7 +524,7 @@ func validateHTTPConnectivity(ctx context.Context, lbAddress string) {
 
 		resp, err := httpClient.Do(req)
 		g.Expect(err).NotTo(HaveOccurred(), "HTTP request to whoami through traefik failed")
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		g.Expect(resp.StatusCode).To(Equal(http.StatusOK),
 			fmt.Sprintf("expected HTTP 200, got %d", resp.StatusCode),
@@ -553,13 +554,12 @@ func shootName(base, suffix string) string {
 	projectName := strings.TrimPrefix(projectNamespace, "garden-")
 	// maxShoot = 21 - len(project), minus 1 for the "-" separator, minus len(suffix)
 	maxBase := 21 - len(projectName) - 1 - len(suffix)
-	if maxBase < 1 {
-		maxBase = 1
-	}
+	maxBase = max(maxBase, 1)
 	if len(base) > maxBase {
 		base = base[:maxBase]
 	}
 	base = strings.TrimRight(base, "-")
+
 	return fmt.Sprintf("%s-%s", base, suffix)
 }
 
@@ -574,15 +574,16 @@ func workerZones() []string {
 	if workerZone != "" {
 		return []string{workerZone}
 	}
+
 	return nil
 }
 
-func purposePtr(p gardencorev1beta1.ShootPurpose) *gardencorev1beta1.ShootPurpose {
-	return &p
-}
+//go:fix inline
+func purposePtr(p gardencorev1beta1.ShootPurpose) *gardencorev1beta1.ShootPurpose { return new(p) }
 
-func mustMarshalJSON(v interface{}) []byte {
+func mustMarshalJSON(v any) []byte {
 	data, err := json.Marshal(v)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
+
 	return data
 }
