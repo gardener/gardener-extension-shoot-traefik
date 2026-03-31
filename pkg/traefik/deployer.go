@@ -7,8 +7,12 @@
 package traefik
 
 import (
+	"bytes"
 	"context"
+	_ "embed"
+	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/api/extensions/v1alpha1/helper"
@@ -22,11 +26,13 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
@@ -37,6 +43,11 @@ const (
 	// ManagedResource to be deleted before timing out.
 	ManagedResourceDeletionTimeout = 2 * time.Minute
 )
+
+// crdYAML contains the Traefik CRD definitions from
+//
+//go:embed crds.yaml
+var crdYAML []byte
 
 var (
 	// shootScheme is a shared scheme for encoding shoot-cluster resources.
@@ -358,7 +369,51 @@ func (d *Deployer) generateResources() (map[string][]byte, error) {
 	}
 	resources["poddisruptionbudget.yaml"] = pdbData
 
+	// Traefik CRDs
+	crds, err := splitCRDs(crdYAML)
+	if err != nil {
+		return nil, fmt.Errorf("failed to split traefik CRDs: %w", err)
+	}
+	for name, data := range crds {
+		resources[name] = data
+	}
+
 	return resources, nil
+}
+
+// splitCRDs splits a multi-document YAML byte slice into individual CRD
+// documents keyed by "crd-<crdname>.yaml".
+func splitCRDs(raw []byte) (map[string][]byte, error) {
+	result := make(map[string][]byte)
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(raw), 4096)
+
+	for {
+		var crd apiextensionsv1.CustomResourceDefinition
+		if err := decoder.Decode(&crd); err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, fmt.Errorf("failed to decode CRD: %w", err)
+		}
+
+		if crd.Kind != "CustomResourceDefinition" || crd.Name == "" {
+			continue
+		}
+
+		data, err := json.Marshal(&crd)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal CRD %s: %w", crd.Name, err)
+		}
+
+		result[fmt.Sprintf("crd-%s.yaml", crd.Name)] = data
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("no CRDs found in embedded YAML")
+	}
+
+	return result, nil
 }
 
 func (d *Deployer) serviceAccount() *corev1.ServiceAccount {

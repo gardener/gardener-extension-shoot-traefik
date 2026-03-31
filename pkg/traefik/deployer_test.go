@@ -485,3 +485,39 @@ func TestIngressClassName(t *testing.T) {
 		})
 	}
 }
+
+func TestSplitCRDs(t *testing.T) {
+	crds, err := splitCRDs(crdYAML)
+	if err != nil {
+		t.Fatalf("splitCRDs() error: %v", err)
+	}
+
+	expectedCRDs := []string{
+		"crd-ingressroutes.traefik.io.yaml",
+		"crd-ingressroutetcps.traefik.io.yaml",
+		"crd-ingressrouteudps.traefik.io.yaml",
+		"crd-middlewares.traefik.io.yaml",
+		"crd-middlewaretcps.traefik.io.yaml",
+		"crd-serverstransports.traefik.io.yaml",
+		"crd-serverstransporttcps.traefik.io.yaml",
+		"crd-tlsoptions.traefik.io.yaml",
+		"crd-tlsstores.traefik.io.yaml",
+		"crd-traefikservices.traefik.io.yaml",
+	}
+
+	if len(crds) != len(expectedCRDs) {
+		t.Errorf("expected %d CRDs, got %d", len(expectedCRDs), len(crds))
+	}
+
+	for _, name := range expectedCRDs {
+		data, ok := crds[name]
+		if !ok {
+			t.Errorf("expected CRD %q not found", name)
+
+			continue
+		}
+		if len(data) == 0 {
+			t.Errorf("CRD %q has empty data", name)
+		}
+	}
+}
