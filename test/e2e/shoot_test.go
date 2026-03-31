@@ -188,7 +188,8 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 		}
 		// AWS requires at least one zone with subnet CIDRs when a zone is given.
 		if workerZone != "" {
-			networks := infra["networks"].(map[string]any)
+			networks, ok := infra["networks"].(map[string]any)
+			Expect(ok).To(BeTrue(), "infra[\"networks\"] should be of type map[string]any")
 			networks["zones"] = []map[string]any{
 				{
 					"name":     workerZone,
