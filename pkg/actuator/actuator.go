@@ -46,7 +46,7 @@ const (
 	Name = "traefik"
 	// ExtensionType is the type of the extension resources, which the
 	// actuator reconciles.
-	ExtensionType = "traefik"
+	ExtensionType = "shoot-traefik"
 	// FinalizerSuffix is the finalizer suffix used by the actuator
 	FinalizerSuffix = "gardener-extension-shoot-traefik"
 )

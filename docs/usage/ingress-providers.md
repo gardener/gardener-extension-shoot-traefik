@@ -26,7 +26,7 @@ metadata:
 spec:
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
@@ -54,7 +54,7 @@ metadata:
 spec:
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
@@ -87,7 +87,7 @@ Enable the Traefik extension with the NGINX-compatible provider:
 spec:
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
@@ -149,7 +149,7 @@ metadata:
 spec:
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
@@ -168,7 +168,7 @@ metadata:
 spec:
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig

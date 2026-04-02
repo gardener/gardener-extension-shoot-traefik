@@ -21,7 +21,7 @@ const (
 	// Name is the name of the shoot validator webhook.
 	Name = "shoot-validator"
 	// ExtensionType is the type of extension being validated.
-	ExtensionType = "traefik"
+	ExtensionType = "shoot-traefik"
 )
 
 // shootValidator validates Shoot resources for the Traefik extension.

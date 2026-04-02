@@ -36,7 +36,7 @@ spec:
   # Purpose MUST be "evaluation" for Traefik extension
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig

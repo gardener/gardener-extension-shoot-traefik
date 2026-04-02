@@ -10,4 +10,4 @@ spec:
           ref: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik:v0.1.0-dev
   resources:
   - kind: Extension
-    type: traefik
+    type: shoot-traefik
