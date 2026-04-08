@@ -17,7 +17,6 @@ import (
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
 	extensionsutil "github.com/gardener/gardener/extensions/pkg/util"
 	v1beta1helper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils/gardener"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -36,10 +35,6 @@ import (
 // ErrInvalidActuator is an error which is returned when creating an [Actuator]
 // with invalid config settings.
 var ErrInvalidActuator = errors.New("invalid actuator")
-
-// ErrShootPurposeNotEvaluation is returned when attempting to deploy Traefik
-// to a shoot that does not have purpose "evaluation".
-var ErrShootPurposeNotEvaluation = errors.New("shoot purpose must be 'evaluation' for traefik extension")
 
 const (
 	// Name is the name of the actuator
@@ -202,22 +197,6 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 		logger.Info("shoot is hibernated, skipping traefik deployment", "cluster", clusterName)
 
 		return nil
-	}
-
-	// Validate that the shoot purpose is "evaluation".
-	// This is a defense-in-depth check - the admission webhook should already
-	// have validated this, but we check again here to be safe.
-	if cluster.Shoot.Spec.Purpose == nil || *cluster.Shoot.Spec.Purpose != gardencorev1beta1.ShootPurposeEvaluation {
-		purposeStr := "nil"
-		if cluster.Shoot.Spec.Purpose != nil {
-			purposeStr = string(*cluster.Shoot.Spec.Purpose)
-		}
-		logger.Error(ErrShootPurposeNotEvaluation, "shoot purpose validation failed",
-			"cluster", clusterName,
-			"purpose", purposeStr,
-		)
-
-		return fmt.Errorf("%w: got purpose '%s'", ErrShootPurposeNotEvaluation, purposeStr)
 	}
 
 	traefikConfig := traefik.DefaultConfig()

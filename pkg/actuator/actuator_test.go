@@ -173,16 +173,6 @@ var _ = Describe("Actuator", Ordered, func() {
 		Expect(err).To(MatchError(ContainSubstring("failed to get cluster")))
 	})
 
-	It("should fail to reconcile when shoot purpose is not evaluation", func() {
-		act, err := actuator.New(k8sClient, imagevector.ImageVector(), actuatorOpts...)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(act).NotTo(BeNil())
-
-		err = act.Reconcile(ctx, logger, extResource)
-		Expect(err).Should(HaveOccurred())
-		Expect(err).To(MatchError(ContainSubstring("shoot purpose must be 'evaluation' for traefik extension")))
-	})
-
 	It("should succeed on Reconcile", func() {
 		// Update shoot to have purpose evaluation
 		shootWithPurpose := shoot.DeepCopy()
