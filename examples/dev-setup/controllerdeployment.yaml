@@ -5,7 +5,7 @@ metadata:
   name: gardener-extension-shoot-traefik
 helm:
   ociRepository:
-    ref: registry.local.gardener.cloud:5001/helm-charts/gardener-extension-shoot-traefik:v0.3.0
+    ref: registry.local.gardener.cloud:5001/helm-charts/gardener-extension-shoot-traefik:v0.4.0-dev
   values:
     webhook:
       enabled: true
