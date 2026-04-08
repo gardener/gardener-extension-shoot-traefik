@@ -72,7 +72,7 @@ jobs:
 
   prepare:
     if: inputs.mode != ''
-    uses: gardener/cc-utils/.github/workflows/prepare.yaml@master
+    uses: gardener/cc-utils/.github/workflows/prepare.yaml@v1
     with:
       mode: ${{ inputs.mode }}
       version-commit-callback-action-path: .github/actions/prepare-release
@@ -90,7 +90,7 @@ jobs:
       packages: write
       id-token: write
     secrets: inherit
-    uses: gardener/cc-utils/.github/workflows/oci-ocm.yaml@master
+    uses: gardener/cc-utils/.github/workflows/oci-ocm.yaml@v1
     with:
       name: gardener-extension-shoot-traefik
       version: ${{ needs.prepare.outputs.version }}
@@ -110,7 +110,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: gardener/cc-utils/.github/workflows/helmchart-ocm.yaml@master
+    uses: gardener/cc-utils/.github/workflows/helmchart-ocm.yaml@v1
     with:
       name: gardener-extension-shoot-traefik
       dir: charts
