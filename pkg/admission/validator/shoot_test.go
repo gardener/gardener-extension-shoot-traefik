@@ -55,7 +55,7 @@ var _ = Describe("Shoot Validator", func() {
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
 					Extensions: []gardencorev1beta1.Extension{
-						{Type: "traefik"},
+						{Type: ExtensionType},
 					},
 				},
 			}
@@ -78,7 +78,7 @@ var _ = Describe("Shoot Validator", func() {
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
 					Extensions: []gardencorev1beta1.Extension{
-						{Type: "traefik"},
+						{Type: ExtensionType},
 					},
 				},
 			}
@@ -101,7 +101,7 @@ var _ = Describe("Shoot Validator", func() {
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: nil,
 					Extensions: []gardencorev1beta1.Extension{
-						{Type: "traefik"},
+						{Type: ExtensionType},
 					},
 				},
 			}
@@ -124,7 +124,7 @@ var _ = Describe("Shoot Validator", func() {
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
 					Extensions: []gardencorev1beta1.Extension{
-						{Type: "traefik"},
+						{Type: ExtensionType},
 					},
 				},
 			}

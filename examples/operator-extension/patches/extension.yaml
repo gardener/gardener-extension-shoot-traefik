@@ -6,11 +6,18 @@ metadata:
     security.gardener.cloud/pod-security-enforce: baseline
 spec:
   deployment:
+    admission:
+      runtimeCluster:
+        values:
+          image:
+            repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik
+            tag: latest
+      virtualCluster: {}
     extension:
       values:
         image:
           repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik
-          tag: v0.1.0-dev
+          tag: latest
         replicaCount: 1
         resources:
           requests:
@@ -25,7 +32,7 @@ spec:
             updateMode: Recreate
   resources:
   - kind: Extension
-    type: traefik
+    type: shoot-traefik
     workerlessSupported: false
     clusterCompatibility:
     - shoot

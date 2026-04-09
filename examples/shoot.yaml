@@ -13,7 +13,7 @@ spec:
   extensions:
     # Traefik extension deploys Traefik ingress controller to the shoot cluster
     # as a replacement for nginx-ingress-controller which is out of maintenance.
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig

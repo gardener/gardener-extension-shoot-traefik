@@ -12,7 +12,7 @@ spec:
       - name: gardener-extension-shoot-traefik
   resources:
     - kind: Extension
-      type: traefik
+      type: shoot-traefik
       workerlessSupported: false
       clusterCompatibility:
         - shoot

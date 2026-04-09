@@ -5,7 +5,7 @@ The `gardener-extension-shoot-traefik` deploys Traefik ingress controller to Gar
 ## Features
 
 - **Traefik Ingress Controller**: Deploys Traefik v3.x as the ingress controller in shoot clusters
-- **Admission Webhook**: Validates that Traefik extension is only enabled for shoots with purpose "evaluation"
+- **Admission Webhook**: Validates that Traefik extension is only enabled for shoots with purpose "evaluation". Deployed as a separate admission controller using the same binary with the `webhook` subcommand.
 - **ManagedResource**: Uses Gardener's ManagedResource mechanism for deployment and lifecycle management
 - **Configurable**: Supports custom Traefik image, replicas, and ingress class configuration
 
@@ -36,7 +36,7 @@ spec:
   # Purpose MUST be "evaluation" for Traefik extension
   purpose: evaluation
   extensions:
-    - type: traefik
+    - type: shoot-traefik
       providerConfig:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
@@ -119,6 +119,57 @@ kubectl -n kube-system port-forward deployment/traefik 9000:9000
 
 Then open `http://localhost:9000/dashboard/` in your browser (the trailing `/` is required).
 
+## Admission Controller
+
+The extension includes an admission controller that validates Shoot resources to ensure
+the Traefik extension can only be enabled for shoots with `purpose: evaluation`.
+
+The admission controller is deployed as a separate component using the same binary
+(`extension-traefik webhook`) and has its own Helm charts under
+`charts/gardener-extension-admission-traefik/`. Following the Gardener extension
+convention, it consists of two sub-charts:
+
+- **`charts/runtime/`** — Deployed in the runtime cluster. Contains the Deployment,
+  Service, RBAC, VPA, and PodDisruptionBudget resources for the webhook server.
+- **`charts/application/`** — Deployed in the virtual garden cluster. Contains the
+  ClusterRole, ClusterRoleBinding, and ServiceAccount needed for the webhook to
+  access Shoot resources.
+
+### Deployment via Gardener Operator
+
+When deploying via `gardener-operator`, the admission controller is automatically
+deployed alongside the extension. The `Extension` resource (from group
+`operator.gardener.cloud/v1alpha1`) specifies both the extension and the admission
+deployment:
+
+```yaml
+apiVersion: operator.gardener.cloud/v1alpha1
+kind: Extension
+metadata:
+  name: gardener-extension-shoot-traefik
+spec:
+  deployment:
+    admission:
+      runtimeCluster:
+        helm:
+          ociRepository:
+            ref: <registry>/admission-shoot-traefik-runtime:<version>
+      virtualCluster:
+        helm:
+          ociRepository:
+            ref: <registry>/admission-shoot-traefik-application:<version>
+    extension:
+      helm:
+        ociRepository:
+          ref: <registry>/gardener-extension-shoot-traefik:<version>
+  resources:
+  - kind: Extension
+    type: shoot-traefik
+```
+
+See [`examples/operator-extension/`](./examples/operator-extension/) for a
+complete example.
+
 ## Development
 
 In order to build a binary of the extension, you can use the following command.
@@ -194,9 +245,9 @@ The `deploy-operator` target takes care of the following.
 
 1. Builds a Docker image of the extension
 2. Loads the image into the `kind` cluster nodes
-3. Packages the Helm charts and pushes them to the local registry
+3. Packages the Helm charts (extension + admission) and pushes them to the local registry
 4. Deploys the `Extension` (from group `operator.gardener.cloud/v1alpha1`) to
-   the _runtime_ cluster
+   the _runtime_ cluster, which includes the admission controller configuration
 
 Verify that we have successfully created the
 `Extension` (from group `operator.gardener.cloud/v1alpha1`) resource.

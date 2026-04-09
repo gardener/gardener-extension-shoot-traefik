@@ -4,10 +4,19 @@ metadata:
   name: gardener-extension-shoot-traefik
 spec:
   deployment:
+    admission:
+      runtimeCluster:
+        helm:
+          ociRepository:
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/admission-shoot-traefik-runtime:latest
+      virtualCluster:
+        helm:
+          ociRepository:
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/admission-shoot-traefik-application:latest
     extension:
       helm:
         ociRepository:
-          ref: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik:v0.1.0-dev
+          ref: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik:latest
   resources:
   - kind: Extension
-    type: traefik
+    type: shoot-traefik
