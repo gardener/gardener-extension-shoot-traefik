@@ -1,5 +1,5 @@
 {{- define "name" -}}
-gardener-extension-admission-traefik
+gardener-extension-admission-shoot-traefik
 {{- end -}}
 
 {{- define "labels.app.key" -}}

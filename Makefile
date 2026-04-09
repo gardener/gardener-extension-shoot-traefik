@@ -237,13 +237,13 @@ check-helm:  ## Lint helm charts and validate rendered templates.
 		$(GO_TOOL) kubeconform \
 			$(KUBECONFORM_OPTS) \
 			-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
-	@$(GO_TOOL) helm lint $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/runtime
-	@$(GO_TOOL) helm template $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/runtime | \
+	@$(GO_TOOL) helm lint $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/runtime
+	@$(GO_TOOL) helm template $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/runtime | \
 		$(GO_TOOL) kubeconform \
 			$(KUBECONFORM_OPTS) \
 			-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
-	@$(GO_TOOL) helm lint $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/application
-	@$(GO_TOOL) helm template $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/application | \
+	@$(GO_TOOL) helm lint $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/application
+	@$(GO_TOOL) helm template $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/application | \
 		$(GO_TOOL) kubeconform \
 			$(KUBECONFORM_OPTS) \
 			-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
@@ -273,12 +273,12 @@ helm-load-chart:  ## Load helm chart to local registry.
 	@$(GO_TOOL) helm package $(SRC_ROOT)/charts/gardener-extension-shoot-traefik --version $(VERSION)
 	@$(GO_TOOL) helm push --plain-http $(EXTENSION_NAME)-$(VERSION).tgz oci://$(LOCAL_REGISTRY)/helm-charts
 	@rm -f $(EXTENSION_NAME)-$(VERSION).tgz
-	@$(GO_TOOL) helm package $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/runtime --version $(VERSION)
-	@$(GO_TOOL) helm push --plain-http admission-traefik-runtime-$(VERSION).tgz oci://$(LOCAL_REGISTRY)/helm-charts
-	@rm -f admission-traefik-runtime-$(VERSION).tgz
-	@$(GO_TOOL) helm package $(SRC_ROOT)/charts/gardener-extension-admission-traefik/charts/application --version $(VERSION)
-	@$(GO_TOOL) helm push --plain-http admission-traefik-application-$(VERSION).tgz oci://$(LOCAL_REGISTRY)/helm-charts
-	@rm -f admission-traefik-application-$(VERSION).tgz
+	@$(GO_TOOL) helm package $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/runtime --version $(VERSION)
+	@$(GO_TOOL) helm push --plain-http admission-shoot-traefik-runtime-$(VERSION).tgz oci://$(LOCAL_REGISTRY)/helm-charts
+	@rm -f admission-shoot-traefik-runtime-$(VERSION).tgz
+	@$(GO_TOOL) helm package $(SRC_ROOT)/charts/gardener-extension-admission-shoot-traefik/charts/application --version $(VERSION)
+	@$(GO_TOOL) helm push --plain-http admission-shoot-traefik-application-$(VERSION).tgz oci://$(LOCAL_REGISTRY)/helm-charts
+	@rm -f admission-shoot-traefik-application-$(VERSION).tgz
 
 .PHONY: update-version-tags
 update-version-tags:  ## Update version tags in helm charts and example resources based on VERSION file.
@@ -290,9 +290,9 @@ update-version-tags:  ## Update version tags in helm charts and example resource
 		$(GO_TOOL) yq -i '.helm.ociRepository.ref = env(oci_charts)' $(SRC_ROOT)/examples/dev-setup/controllerdeployment.yaml
 	@env oci_charts=$(LOCAL_REGISTRY)/helm-charts/$(EXTENSION_NAME):$(VERSION) \
 		$(GO_TOOL) yq -i '.spec.deployment.extension.helm.ociRepository.ref = env(oci_charts)' $(SRC_ROOT)/examples/operator-extension/base/extension.yaml
-	@env oci_charts=$(LOCAL_REGISTRY)/helm-charts/admission-traefik-runtime:$(VERSION) \
+	@env oci_charts=$(LOCAL_REGISTRY)/helm-charts/admission-shoot-traefik-runtime:$(VERSION) \
 		$(GO_TOOL) yq -i '.spec.deployment.admission.runtimeCluster.helm.ociRepository.ref = env(oci_charts)' $(SRC_ROOT)/examples/operator-extension/base/extension.yaml
-	@env oci_charts=$(LOCAL_REGISTRY)/helm-charts/admission-traefik-application:$(VERSION) \
+	@env oci_charts=$(LOCAL_REGISTRY)/helm-charts/admission-shoot-traefik-application:$(VERSION) \
 		$(GO_TOOL) yq -i '.spec.deployment.admission.virtualCluster.helm.ociRepository.ref = env(oci_charts)' $(SRC_ROOT)/examples/operator-extension/base/extension.yaml
 	@env image=$(IMAGE) tag=$(VERSION) \
 		$(GO_TOOL) yq -i '(.spec.deployment.extension.values.image.repository = env(image)) | (.spec.deployment.extension.values.image.tag = env(tag))' $(SRC_ROOT)/examples/operator-extension/patches/extension.yaml

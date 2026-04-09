@@ -1,6 +1,0 @@
-apiVersion: v1
-description: A Helm chart to deploy the gardener-extension-admission-traefik runtime related resources
-name: admission-traefik-runtime
-version: 0.1.0
-sources:
-- https://github.com/gardener/gardener-extension-shoot-traefik

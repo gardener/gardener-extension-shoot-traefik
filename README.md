@@ -126,7 +126,7 @@ the Traefik extension can only be enabled for shoots with `purpose: evaluation`.
 
 The admission controller is deployed as a separate component using the same binary
 (`extension-traefik webhook`) and has its own Helm charts under
-`charts/gardener-extension-admission-traefik/`. Following the Gardener extension
+`charts/gardener-extension-admission-shoot-traefik/`. Following the Gardener extension
 convention, it consists of two sub-charts:
 
 - **`charts/runtime/`** — Deployed in the runtime cluster. Contains the Deployment,

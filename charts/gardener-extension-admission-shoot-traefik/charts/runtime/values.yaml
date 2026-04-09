@@ -33,7 +33,7 @@ gardener:
   virtualCluster:
     enabled: true
     serviceAccount: {}
-#     name: gardener-extension-admission-traefik
+#     name: gardener-extension-admission-shoot-traefik
 #     namespace: kube-system
   runtimeCluster: {}
 #   priorityClassName: gardener-garden-system-400

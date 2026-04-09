@@ -1,5 +1,5 @@
 {{- define "name" -}}
-gardener-extension-admission-traefik
+gardener-extension-admission-shoot-traefik
 {{- end -}}
 
 {{- define "labels.app.key" -}}
@@ -23,5 +23,5 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "leaderelectionid" -}}
-gardener-extension-admission-traefik
+gardener-extension-admission-shoot-traefik
 {{- end -}}

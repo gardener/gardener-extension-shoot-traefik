@@ -123,7 +123,7 @@ jobs:
               - ref: ocm-resource:gardener-extension-shoot-traefik.tag
                 attribute: image.tag
           - name: admission-shoot-traefik-application
-            dir: charts/gardener-extension-admission-traefik/charts/application
+            dir: charts/gardener-extension-admission-shoot-traefik/charts/application
             oci-repository: charts/gardener/extensions
             ocm-mappings:
               - ref: ocm-resource:gardener-extension-shoot-traefik.repository
@@ -131,7 +131,7 @@ jobs:
               - ref: ocm-resource:gardener-extension-shoot-traefik.tag
                 attribute: image.tag
           - name: admission-shoot-traefik-runtime
-            dir: charts/gardener-extension-admission-traefik/charts/runtime
+            dir: charts/gardener-extension-admission-shoot-traefik/charts/runtime
             oci-repository: charts/gardener/extensions
             ocm-mappings:
               - ref: ocm-resource:gardener-extension-shoot-traefik.repository
