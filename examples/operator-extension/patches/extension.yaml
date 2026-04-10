@@ -7,11 +7,11 @@ metadata:
 spec:
   deployment:
     admission:
-      runtimeCluster:
-        values:
-          image:
-            repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik
-            tag: latest
+      runtimeCluster: {}
+      values:
+        image:
+          repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/gardener-extension-shoot-traefik
+          tag: latest
       virtualCluster: {}
     extension:
       values:
