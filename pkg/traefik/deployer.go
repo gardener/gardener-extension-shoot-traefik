@@ -99,7 +99,7 @@ func DefaultConfig() Config {
 	return Config{
 		Replicas:        2,
 		IngressProvider: config.IngressProviderKubernetesIngress,
-		LogLevel:        "INFO",
+		LogLevel:        "Info",
 	}
 }
 

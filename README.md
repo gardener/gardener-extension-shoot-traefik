@@ -43,9 +43,9 @@ spec:
         spec:
           # Optional: Number of replicas (default: 2)
           replicas: 2
-          # Optional: Log level (default: INFO)
-          # Valid values: DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-          logLevel: INFO
+          # Optional: Log level (default: Info)
+          # Valid values: Debug, Info, Warn, Error, Fatal, Panic
+          logLevel: Info
           # Optional: Ingress provider type (default: KubernetesIngress)
           # Valid values:
           # - KubernetesIngress: Standard Kubernetes Ingress provider (ingress class: "traefik")
@@ -62,7 +62,7 @@ spec:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `spec.replicas` | int32 | `2` | Number of Traefik replicas |
-| `spec.logLevel` | string | `INFO` | Traefik log level: `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`, `PANIC` |
+| `spec.logLevel` | string | `Info` | Traefik log level: `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic` |
 | `spec.ingressProvider` | string | `KubernetesIngress` | Kubernetes Ingress provider type: `KubernetesIngress` or `KubernetesIngressNGINX` |
 | `spec.dashboard` | bool | `false` | Enable the Traefik API and dashboard (not recommended for production) |
 

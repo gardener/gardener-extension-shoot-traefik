@@ -21,9 +21,9 @@ spec:
           # Optional: Number of Traefik replicas
           replicas: 2
           
-          # Optional: Log level (default: "INFO")
-          # Valid values: DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-          # logLevel: INFO
+          # Optional: Log level (default: "Info")
+          # Valid values: Debug, Info, Warn, Error, Fatal, Panic
+          # logLevel: Info
           
           # Optional: Ingress provider type (default: "KubernetesIngress")
           # Valid values:

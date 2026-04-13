@@ -27,10 +27,10 @@ const (
 
 // ValidLogLevels contains the set of log levels supported by Traefik.
 var ValidLogLevels = map[string]struct{}{
-	"DEBUG": {},
-	"INFO":  {},
-	"WARN":  {},
-	"ERROR": {},
-	"FATAL": {},
-	"PANIC": {},
+	"Debug": {},
+	"Info":  {},
+	"Warn":  {},
+	"Error": {},
+	"Fatal": {},
+	"Panic": {},
 }

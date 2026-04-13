@@ -36,8 +36,8 @@ type TraefikConfigSpec struct {
 	IngressProvider IngressProviderType `json:"ingressProvider,omitempty"`
 
 	// LogLevel sets the Traefik log level.
-	// Valid values are: DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-	// Defaults to "INFO" if not specified.
+	// Valid values are: Debug, Info, Warn, Error, Fatal, Panic
+	// Defaults to "Info" if not specified.
 	LogLevel string `json:"logLevel,omitempty"`
 
 	// Dashboard enables the Traefik dashboard.

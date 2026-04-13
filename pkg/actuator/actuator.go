@@ -214,7 +214,7 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 			}
 			if cfg.Spec.LogLevel != "" {
 				if _, ok := traefik.ValidLogLevels[cfg.Spec.LogLevel]; !ok {
-					return fmt.Errorf("invalid traefik log level %q: must be one of DEBUG, INFO, WARN, ERROR, FATAL, PANIC", cfg.Spec.LogLevel)
+					return fmt.Errorf("invalid traefik log level %q: must be one of Debug, Info, Warn, Error, Fatal, Panic", cfg.Spec.LogLevel)
 				}
 				traefikConfig.LogLevel = cfg.Spec.LogLevel
 			}

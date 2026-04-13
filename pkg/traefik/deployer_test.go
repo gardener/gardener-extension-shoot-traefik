@@ -219,24 +219,24 @@ func TestDeployment_LogLevel(t *testing.T) {
 		expectedArg string
 	}{
 		{
-			name:        "INFO log level",
-			logLevel:    "INFO",
-			expectedArg: "--log.level=INFO",
+			name:        "Info log level",
+			logLevel:    "Info",
+			expectedArg: "--log.level=Info",
 		},
 		{
-			name:        "DEBUG log level",
-			logLevel:    "DEBUG",
-			expectedArg: "--log.level=DEBUG",
+			name:        "Debug log level",
+			logLevel:    "Debug",
+			expectedArg: "--log.level=Debug",
 		},
 		{
-			name:        "WARN log level",
-			logLevel:    "WARN",
-			expectedArg: "--log.level=WARN",
+			name:        "Warn log level",
+			logLevel:    "Warn",
+			expectedArg: "--log.level=Warn",
 		},
 		{
-			name:        "ERROR log level",
-			logLevel:    "ERROR",
-			expectedArg: "--log.level=ERROR",
+			name:        "Error log level",
+			logLevel:    "Error",
+			expectedArg: "--log.level=Error",
 		},
 	}
 
