@@ -3,7 +3,7 @@ module github.com/gardener/gardener-extension-shoot-traefik
 go 1.26.1
 
 require (
-	github.com/gardener/gardener v1.138.2
+	github.com/gardener/gardener v1.138.3
 	github.com/gardener/gardener/pkg/apis v1.139.2
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.28.1
