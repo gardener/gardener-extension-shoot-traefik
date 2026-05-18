@@ -11,7 +11,6 @@ SHELL = /usr/bin/env bash -o pipefail
 GOCMD?= go
 SRC_ROOT := $(shell git rev-parse --show-toplevel)
 HACK_DIR := $(SRC_ROOT)/hack
-GARDENER_HACK_DIR := $(shell go list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack
 SRC_DIRS := $(shell $(GOCMD) list -f '{{ .Dir }}' ./...)
 
 GOOS := $(shell $(GOCMD) env GOOS)
