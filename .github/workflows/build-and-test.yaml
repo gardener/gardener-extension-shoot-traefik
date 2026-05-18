@@ -61,6 +61,10 @@ jobs:
         run: |
           set -eu
           make test
+      - name: Run SAST
+        run: |
+          set -eu
+          make sast-report
       - name: Build binary
         run: |
           set -eu

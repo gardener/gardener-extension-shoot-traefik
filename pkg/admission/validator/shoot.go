@@ -37,10 +37,9 @@ func NewShootValidatorWebhook(mgr manager.Manager) (*extensionswebhook.Webhook, 
 	decoder := serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder()
 
 	return extensionswebhook.New(mgr, extensionswebhook.Args{
-		Provider: ExtensionType,
-		Name:     Name,
-		Path:     "/webhooks/validate-shoot-traefik",
-		Target:   extensionswebhook.TargetSeed,
+		Name:   Name,
+		Path:   "/webhooks/validate-shoot-traefik",
+		Target: extensionswebhook.TargetSeed,
 		Validators: map[extensionswebhook.Validator][]extensionswebhook.Type{
 			NewShootValidator(mgr.GetClient(), decoder): {
 				{Obj: &gardencorev1beta1.Shoot{}},

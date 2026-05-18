@@ -11,6 +11,7 @@ SHELL = /usr/bin/env bash -o pipefail
 GOCMD?= go
 SRC_ROOT := $(shell git rev-parse --show-toplevel)
 HACK_DIR := $(SRC_ROOT)/hack
+GARDENER_HACK_DIR := $(shell go list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack
 SRC_DIRS := $(shell $(GOCMD) list -f '{{ .Dir }}' ./...)
 
 GOOS := $(shell $(GOCMD) env GOOS)
@@ -19,9 +20,11 @@ TOOLS_MOD_DIR := $(SRC_ROOT)/internal/tools
 TOOLS_MOD_FILE := $(TOOLS_MOD_DIR)/go.mod
 GO_MODULE := $(shell $(GOCMD) list -m -f '{{ .Path }}' )
 GO_TOOL := $(GOCMD) tool -modfile $(TOOLS_MOD_FILE)
+export GOTOOLCHAIN = go$(shell $(GOCMD) list -m -f '{{ .GoVersion }}')
 
 LOCAL_BIN ?= $(SRC_ROOT)/bin
 BINARY    ?= $(LOCAL_BIN)/extension-traefik
+GOSEC     ?= $(LOCAL_BIN)/gosec
 
 VERSION := $(shell cat VERSION)
 REVISION := $(shell git rev-parse --short HEAD)
@@ -112,6 +115,9 @@ $(BINARY): $(SRC_DIRS) | $(LOCAL_BIN)
 		-o $(LOCAL_BIN)/ \
 		-ldflags="-X '$(GO_MODULE)/pkg/version.Version=${VERSION}'" \
 		./cmd/extension-traefik
+
+$(GOSEC): | $(LOCAL_BIN)
+	$(GOCMD) build -modfile $(TOOLS_MOD_FILE) -o $@ github.com/securego/gosec/v2/cmd/gosec
 .PHONY: goimports-reviser
 goimports-reviser:
 	@$(GO_TOOL) goimports-reviser -set-exit-status -rm-unused ./...
@@ -123,6 +129,17 @@ lint:
 .PHONY: govulncheck
 govulncheck:
 	@$(GO_TOOL) govulncheck -show verbose ./...
+
+.PHONY: sast
+sast: $(GOSEC)
+	@PATH=$(LOCAL_BIN):$(PATH) ./hack/sast.sh
+
+.PHONY: sast-report
+sast-report: $(GOSEC)
+	@PATH=$(LOCAL_BIN):$(PATH) ./hack/sast.sh --gosec-report true
+
+.PHONY: verify
+verify: goimports-reviser lint checklicense test sast
 
 .PHONY: api-ref-docs
 api-ref-docs:
@@ -146,10 +163,14 @@ get:
 	@$(GOCMD) mod download
 	@$(GOCMD) mod tidy
 
+.PHONY: tidy
+tidy: gotidy
+
 .PHONY: gotidy
 gotidy:
 	@$(GOCMD) mod tidy
 	@cd $(TOOLS_MOD_DIR) && $(GOCMD) mod tidy
+	@cp $$($(GOCMD) list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack/sast.sh $(HACK_DIR)/sast.sh && chmod +xw $(HACK_DIR)/sast.sh
 
 .PHONY: test
 test:  ## Start envtest and run the unit tests.
