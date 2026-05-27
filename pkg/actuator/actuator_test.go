@@ -24,6 +24,8 @@ import (
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
 )
 
+const localEnv = "local"
+
 var _ = Describe("Actuator", Ordered, func() {
 	var (
 		// Contain the serialized cloud profile, seed and shoot and provider config
@@ -53,15 +55,15 @@ var _ = Describe("Actuator", Ordered, func() {
 		}
 		cloudProfile = &corev1beta1.CloudProfile{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "local",
+				Name: localEnv,
 			},
 			Spec: corev1beta1.CloudProfileSpec{
-				Type: "local",
+				Type: localEnv,
 			},
 		}
 		seed = &corev1beta1.Seed{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "local",
+				Name: localEnv,
 			},
 			Spec: corev1beta1.SeedSpec{
 				Ingress: &corev1beta1.Ingress{
@@ -69,7 +71,7 @@ var _ = Describe("Actuator", Ordered, func() {
 				},
 				Provider: corev1beta1.SeedProvider{
 					Type:   "local",
-					Region: "local",
+					Region: localEnv,
 					Zones:  []string{"0"},
 				},
 			},
@@ -80,11 +82,11 @@ var _ = Describe("Actuator", Ordered, func() {
 				Namespace: projectNamespace.Name,
 			},
 			Spec: corev1beta1.ShootSpec{
-				SeedName: new("local"),
+				SeedName: new(localEnv),
 				Provider: corev1beta1.Provider{
-					Type: "local",
+					Type: localEnv,
 				},
-				Region: "local",
+				Region: localEnv,
 			},
 		}
 	)

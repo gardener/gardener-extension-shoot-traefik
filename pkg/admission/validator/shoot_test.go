@@ -17,6 +17,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+const (
+	testAPIVersion = "core.gardener.cloud/v1beta1"
+	testKind       = "Shoot"
+	testShootName  = "test-shoot"
+	testNamespace  = "garden-test"
+)
+
 func TestValidator(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Admission Validator Suite")
@@ -45,12 +52,12 @@ var _ = Describe("Shoot Validator", func() {
 			purpose := gardencorev1beta1.ShootPurposeEvaluation
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
@@ -68,12 +75,12 @@ var _ = Describe("Shoot Validator", func() {
 			purpose := gardencorev1beta1.ShootPurposeProduction
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
@@ -91,12 +98,12 @@ var _ = Describe("Shoot Validator", func() {
 		It("should deny shoot with nil purpose", func() {
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: nil,
@@ -114,12 +121,12 @@ var _ = Describe("Shoot Validator", func() {
 			purpose := gardencorev1beta1.ShootPurposeDevelopment
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
@@ -140,12 +147,12 @@ var _ = Describe("Shoot Validator", func() {
 			purpose := gardencorev1beta1.ShootPurposeProduction
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
@@ -163,12 +170,12 @@ var _ = Describe("Shoot Validator", func() {
 			purpose := gardencorev1beta1.ShootPurposeProduction
 			shoot := &gardencorev1beta1.Shoot{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "core.gardener.cloud/v1beta1",
-					Kind:       "Shoot",
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-shoot",
-					Namespace: "garden-test",
+					Name:      testShootName,
+					Namespace: testNamespace,
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose:    &purpose,

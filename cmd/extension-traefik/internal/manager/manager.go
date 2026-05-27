@@ -35,6 +35,8 @@ import (
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/mgr"
 )
 
+const extensionName = "gardener-extension-shoot-traefik"
+
 // flags stores the manager flags as provided from the command-line
 type flags struct {
 	extensionName             string
@@ -142,7 +144,7 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "extension-name",
 				Usage:       "name of the gardener extension",
-				Value:       "gardener-extension-shoot-traefik",
+				Value:       extensionName,
 				Sources:     cli.EnvVars("EXTENSION_NAME"),
 				Destination: &flags.extensionName,
 			},
@@ -176,7 +178,7 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "heartbeat-namespace",
 				Usage:       "namespace to use for the heartbeat lease",
-				Value:       "gardener-extension-shoot-traefik",
+				Value:       extensionName,
 				Sources:     cli.EnvVars("HEARTBEAT_NAMESPACE"),
 				Destination: &flags.heartbeatNamespace,
 			},
@@ -197,7 +199,7 @@ func New() *cli.Command {
 			&cli.StringFlag{
 				Name:        "leader-election-namespace",
 				Usage:       "namespace to use for the leader election lease",
-				Value:       "gardener-extension-shoot-traefik",
+				Value:       extensionName,
 				Sources:     cli.EnvVars("LEADER_ELECTION_NAMESPACE"),
 				Destination: &flags.leaderElectionNamespace,
 			},
