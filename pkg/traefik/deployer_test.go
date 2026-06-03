@@ -17,6 +17,10 @@ import (
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
 )
 
+const (
+	testAPIInsecureFalse = "--api.insecure=false"
+)
+
 func TestDeployment_ImageOverride(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -29,7 +33,7 @@ func TestDeployment_ImageOverride(t *testing.T) {
 			name: "use image vector when config empty",
 			imageVector: imagevector.ImageVector{
 				{
-					Name:       "traefik",
+					Name:       ImageName,
 					Repository: new("docker.io/library/traefik"),
 					Tag:        new("v3.6.10"),
 				},
@@ -155,7 +159,7 @@ func TestDeployment_IngressProvider(t *testing.T) {
 
 			imageVec := imagevector.ImageVector{
 				{
-					Name:       "traefik",
+					Name:       ImageName,
 					Repository: new("docker.io/library/traefik"),
 					Tag:        new("v3.6.10"),
 				},
@@ -197,7 +201,7 @@ func TestDeployment_IngressProvider(t *testing.T) {
 
 			// Verify common args are always present
 			commonArgs := []string{
-				"--api.insecure=false",
+				testAPIInsecureFalse,
 				"--ping=true",
 				"--metrics.prometheus=true",
 				"--entrypoints.web.address=:8000",
@@ -220,7 +224,7 @@ func TestDeployment_LogLevel(t *testing.T) {
 	}{
 		{
 			name:        "Info log level",
-			logLevel:    "Info",
+			logLevel:    LogLevelInfo,
 			expectedArg: "--log.level=Info",
 		},
 		{
@@ -247,7 +251,7 @@ func TestDeployment_LogLevel(t *testing.T) {
 
 			imageVec := imagevector.ImageVector{
 				{
-					Name:       "traefik",
+					Name:       ImageName,
 					Repository: new("docker.io/library/traefik"),
 					Tag:        new("v3.6.10"),
 				},
@@ -292,7 +296,7 @@ func TestDeployment_Dashboard(t *testing.T) {
 			name:      "dashboard disabled by default",
 			dashboard: false,
 			expectedArgs: []string{
-				"--api.insecure=false",
+				testAPIInsecureFalse,
 				"--api.dashboard=false",
 			},
 			notExpectedArgs: []string{
@@ -309,7 +313,7 @@ func TestDeployment_Dashboard(t *testing.T) {
 				"--entrypoints.traefik.address=:9000",
 			},
 			notExpectedArgs: []string{
-				"--api.insecure=false",
+				testAPIInsecureFalse,
 				"--api.dashboard=false",
 			},
 			expectPort: true,
@@ -323,7 +327,7 @@ func TestDeployment_Dashboard(t *testing.T) {
 
 			imageVec := imagevector.ImageVector{
 				{
-					Name:       "traefik",
+					Name:       ImageName,
 					Repository: new("docker.io/library/traefik"),
 					Tag:        new("v3.6.10"),
 				},
@@ -422,7 +426,7 @@ func TestClusterRole_RBAC_Permissions(t *testing.T) {
 				if slices.Contains(rule.Resources, "namespaces") {
 					hasNamespacePerms = true
 					// Verify the permissions are correct
-					expectedVerbs := []string{"get", "list", "watch"}
+					expectedVerbs := []string{VerbGet, VerbList, VerbWatch}
 					for _, verb := range expectedVerbs {
 						if !slices.Contains(rule.Verbs, verb) {
 							t.Errorf("expected verb %q for namespaces resource not found", verb)
@@ -442,11 +446,11 @@ func TestClusterRole_RBAC_Permissions(t *testing.T) {
 
 			// Verify common permissions are always present
 			commonResources := map[string][]string{
-				"services":       {"get", "list", "watch"},
-				"endpoints":      {"get", "list", "watch"},
-				"secrets":        {"get", "list", "watch"},
-				"ingresses":      {"get", "list", "watch"},
-				"ingressclasses": {"get", "list", "watch"},
+				"services":       {VerbGet, VerbList, VerbWatch},
+				"endpoints":      {VerbGet, VerbList, VerbWatch},
+				"secrets":        {VerbGet, VerbList, VerbWatch},
+				"ingresses":      {VerbGet, VerbList, VerbWatch},
+				"ingressclasses": {VerbGet, VerbList, VerbWatch},
 			}
 
 			for resource, expectedVerbs := range commonResources {
@@ -477,7 +481,7 @@ func TestDefaultConfig(t *testing.T) {
 		t.Errorf("expected default replicas to be 2, got %d", defaultCfg.Replicas)
 	}
 
-	if defaultCfg.IngressClassName() != "traefik" {
+	if defaultCfg.IngressClassName() != DeploymentName {
 		t.Errorf("expected default ingress class name to be 'traefik', got %q", defaultCfg.IngressClassName())
 	}
 
@@ -496,20 +500,20 @@ func TestIngressClass_Controller(t *testing.T) {
 		{
 			name:               "KubernetesIngress provider - ingress class name is traefik",
 			ingressProvider:    config.IngressProviderKubernetesIngress,
-			expectedName:       "traefik",
-			expectedController: "traefik.io/ingress-controller",
+			expectedName:       DeploymentName,
+			expectedController: TraefikIngressController,
 		},
 		{
 			name:               "KubernetesIngressNGINX provider - ingress class name is nginx",
 			ingressProvider:    config.IngressProviderKubernetesIngressNGINX,
-			expectedName:       "nginx",
+			expectedName:       IngressClassNGINX,
 			expectedController: "k8s.io/ingress-nginx",
 		},
 		{
 			name:               "empty provider defaults to traefik ingress class",
 			ingressProvider:    "",
-			expectedName:       "traefik",
-			expectedController: "traefik.io/ingress-controller",
+			expectedName:       DeploymentName,
+			expectedController: TraefikIngressController,
 		},
 	}
 
@@ -539,7 +543,7 @@ func TestIngressClass_Controller(t *testing.T) {
 			}
 
 			// Verify it's marked as default class
-			if ingressClass.Annotations["ingressclass.kubernetes.io/is-default-class"] != "true" {
+			if ingressClass.Annotations[AnnotationIsDefaultClass] != AnnotationIsDefaultClassValue {
 				t.Error("expected ingress class to be marked as default")
 			}
 		})
@@ -555,17 +559,17 @@ func TestIngressClassName(t *testing.T) {
 		{
 			name:            "KubernetesIngress returns traefik",
 			ingressProvider: config.IngressProviderKubernetesIngress,
-			expected:        "traefik",
+			expected:        DeploymentName,
 		},
 		{
 			name:            "KubernetesIngressNGINX returns nginx",
 			ingressProvider: config.IngressProviderKubernetesIngressNGINX,
-			expected:        "nginx",
+			expected:        IngressClassNGINX,
 		},
 		{
 			name:            "empty provider returns traefik",
 			ingressProvider: "",
-			expected:        "traefik",
+			expected:        DeploymentName,
 		},
 	}
 

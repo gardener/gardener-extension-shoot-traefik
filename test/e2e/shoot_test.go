@@ -35,6 +35,10 @@ const (
 	// whoamiImage is the test server used for ingress validation.
 	// traefik/whoami is a tiny Go HTTP server that returns OS information and HTTP request details.
 	whoamiImage = "traefik/whoami:v1.10.3"
+	// jsonKeyAPIVersion is the JSON key for the API version field.
+	jsonKeyAPIVersion = "apiVersion"
+	// jsonKeyKind is the JSON key for the kind field.
+	jsonKeyKind = "kind"
 	// whoamiPort is the HTTP port exposed by the whoami container.
 	whoamiPort = 80
 	// testNamespace is the namespace where test workloads are deployed on the shoot cluster.
@@ -106,7 +110,7 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 			},
 		},
 		Spec: gardencorev1beta1.ShootSpec{
-			Purpose: purposePtr(gardencorev1beta1.ShootPurposeEvaluation),
+			Purpose: ptr.To(gardencorev1beta1.ShootPurposeEvaluation),
 			CloudProfile: &gardencorev1beta1.CloudProfileReference{
 				Name: cloudProfileName,
 				Kind: cloudProfileKind,
@@ -139,8 +143,8 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 					Type: "shoot-traefik",
 					ProviderConfig: &runtime.RawExtension{
 						Raw: mustMarshalJSON(map[string]any{
-							"apiVersion": "traefik.extensions.gardener.cloud/v1alpha1",
-							"kind":       "TraefikConfig",
+							jsonKeyAPIVersion: "traefik.extensions.gardener.cloud/v1alpha1",
+							jsonKeyKind:       "TraefikConfig",
 							"spec": map[string]any{
 								"replicas":        2,
 								"ingressProvider": ingressProvider,
@@ -178,8 +182,8 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 		}
 	} else if providerType == "aws" {
 		infra := map[string]any{
-			"apiVersion": "aws.provider.extensions.gardener.cloud/v1alpha1",
-			"kind":       "InfrastructureConfig",
+			jsonKeyAPIVersion: "aws.provider.extensions.gardener.cloud/v1alpha1",
+			jsonKeyKind:       "InfrastructureConfig",
 			"networks": map[string]any{
 				"vpc": map[string]any{
 					"cidr": vpcCIDR,
@@ -205,8 +209,8 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 		// AWS also requires a ControlPlaneConfig.
 		shoot.Spec.Provider.ControlPlaneConfig = &runtime.RawExtension{
 			Raw: mustMarshalJSON(map[string]any{
-				"apiVersion": "aws.provider.extensions.gardener.cloud/v1alpha1",
-				"kind":       "ControlPlaneConfig",
+				jsonKeyAPIVersion: "aws.provider.extensions.gardener.cloud/v1alpha1",
+				jsonKeyKind:       "ControlPlaneConfig",
 				"loadBalancerController": map[string]any{
 					"enabled": false,
 				},
@@ -578,9 +582,6 @@ func workerZones() []string {
 
 	return nil
 }
-
-//go:fix inline
-func purposePtr(p gardencorev1beta1.ShootPurpose) *gardencorev1beta1.ShootPurpose { return new(p) }
 
 func mustMarshalJSON(v any) []byte {
 	data, err := json.Marshal(v)

@@ -99,7 +99,7 @@ func DefaultConfig() Config {
 	return Config{
 		Replicas:        2,
 		IngressProvider: config.IngressProviderKubernetesIngress,
-		LogLevel:        "Info",
+		LogLevel:        LogLevelInfo,
 	}
 }
 
@@ -107,10 +107,10 @@ func DefaultConfig() Config {
 // IngressProvider. KubernetesIngressNGINX uses "nginx", all others use "traefik".
 func (c Config) IngressClassName() string {
 	if c.IngressProvider == config.IngressProviderKubernetesIngressNGINX {
-		return "nginx"
+		return IngressClassNGINX
 	}
 
-	return "traefik"
+	return DeploymentName
 }
 
 // Deployer handles deploying Traefik resources to shoot clusters.
@@ -284,7 +284,7 @@ func (d *Deployer) DeleteDNSRecord(ctx context.Context, namespace string) error 
 		if dnsRecord.Annotations == nil {
 			dnsRecord.Annotations = make(map[string]string)
 		}
-		dnsRecord.Annotations[v1beta1constants.ConfirmationDeletion] = "true"
+		dnsRecord.Annotations[v1beta1constants.ConfirmationDeletion] = ConfirmationDeletionValue
 		if err := d.client.Patch(ctx, dnsRecord, patch); err != nil {
 			return fmt.Errorf("failed to annotate DNSRecord with deletion confirmation: %w", err)
 		}
@@ -428,10 +428,10 @@ func (d *Deployer) serviceAccount() *corev1.ServiceAccount {
 			Name:      ServiceAccountName,
 			Namespace: Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/component":  "ingress-controller",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelComponent: LabelComponentValue,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 	}
@@ -442,17 +442,17 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 		{
 			APIGroups: []string{""},
 			Resources: []string{"services", "endpoints", "secrets", "nodes"},
-			Verbs:     []string{"get", "list", "watch"},
+			Verbs:     []string{VerbGet, VerbList, VerbWatch},
 		},
 		{
 			APIGroups: []string{"discovery.k8s.io"},
 			Resources: []string{"endpointslices"},
-			Verbs:     []string{"get", "list", "watch"},
+			Verbs:     []string{VerbGet, VerbList, VerbWatch},
 		},
 		{
 			APIGroups: []string{"extensions", "networking.k8s.io"},
 			Resources: []string{"ingresses", "ingressclasses"},
-			Verbs:     []string{"get", "list", "watch"},
+			Verbs:     []string{VerbGet, VerbList, VerbWatch},
 		},
 		{
 			APIGroups: []string{"extensions", "networking.k8s.io"},
@@ -473,7 +473,7 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 				"tlsstores",
 				"traefikservices",
 			},
-			Verbs: []string{"get", "list", "watch"},
+			Verbs: []string{VerbGet, VerbList, VerbWatch},
 		},
 	}
 
@@ -484,12 +484,12 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 		rules = append(rules, rbacv1.PolicyRule{
 			APIGroups: []string{""},
 			Resources: []string{"namespaces"},
-			Verbs:     []string{"get", "list", "watch"},
+			Verbs:     []string{VerbGet, VerbList, VerbWatch},
 		})
 		rules = append(rules, rbacv1.PolicyRule{
 			APIGroups: []string{""},
 			Resources: []string{"pods"},
-			Verbs:     []string{"get"},
+			Verbs:     []string{VerbGet},
 		})
 	}
 
@@ -499,11 +499,11 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 			Kind:       "ClusterRole",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "traefik-ingress-controller",
+			Name: IngressControllerRoleName,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 		Rules: rules,
@@ -517,17 +517,17 @@ func (d *Deployer) clusterRoleBinding() *rbacv1.ClusterRoleBinding {
 			Kind:       "ClusterRoleBinding",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "traefik-ingress-controller",
+			Name: IngressControllerRoleName,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
 			Kind:     "ClusterRole",
-			Name:     "traefik-ingress-controller",
+			Name:     IngressControllerRoleName,
 		},
 		Subjects: []rbacv1.Subject{
 			{
@@ -541,10 +541,10 @@ func (d *Deployer) clusterRoleBinding() *rbacv1.ClusterRoleBinding {
 
 func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 	labels := map[string]string{
-		"app.kubernetes.io/name":                 "traefik",
-		"app.kubernetes.io/instance":             "traefik",
-		"app.kubernetes.io/component":            "ingress-controller",
-		"app.kubernetes.io/managed-by":           "gardener",
+		LabelName:                                DeploymentName,
+		LabelInstance:                            DeploymentName,
+		LabelComponent:                           LabelComponentValue,
+		LabelManagedBy:                           LabelManagedByValue,
 		"networking.gardener.cloud/to-apiserver": "allowed",
 		"networking.gardener.cloud/to-dns":       "allowed",
 	}
@@ -632,8 +632,8 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 			Replicas: new(d.config.Replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/name":     "traefik",
-					"app.kubernetes.io/instance": "traefik",
+					LabelName:     DeploymentName,
+					LabelInstance: DeploymentName,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
@@ -661,7 +661,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 							StartupProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/ping",
+										Path: PingPath,
 										Port: intstr.FromInt(8000),
 									},
 								},
@@ -673,7 +673,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 							LivenessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/ping",
+										Path: PingPath,
 										Port: intstr.FromInt(8000),
 									},
 								},
@@ -684,7 +684,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/ping",
+										Path: PingPath,
 										Port: intstr.FromInt(8000),
 									},
 								},
@@ -718,8 +718,8 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 							WhenUnsatisfiable: corev1.ScheduleAnyway,
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									"app.kubernetes.io/name":     "traefik",
-									"app.kubernetes.io/instance": "traefik",
+									LabelName:     DeploymentName,
+									LabelInstance: DeploymentName,
 								},
 							},
 						},
@@ -737,20 +737,20 @@ func (d *Deployer) service() *corev1.Service {
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "traefik",
+			Name:      DeploymentName,
 			Namespace: Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/component":  "ingress-controller",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelComponent: LabelComponentValue,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeLoadBalancer,
 			Selector: map[string]string{
-				"app.kubernetes.io/name":     "traefik",
-				"app.kubernetes.io/instance": "traefik",
+				LabelName:     DeploymentName,
+				LabelInstance: DeploymentName,
 			},
 			Ports: []corev1.ServicePort{
 				{
@@ -775,7 +775,7 @@ func (d *Deployer) ingressClass() *networkingv1.IngressClass {
 	// The kubernetesingress provider filters IngressClasses by "traefik.io/ingress-controller".
 	// The kubernetesingressnginx provider expects "k8s.io/ingress-nginx" to be
 	// compatible with existing Ingress resources that were created for nginx-ingress-controller.
-	controller := "traefik.io/ingress-controller"
+	controller := TraefikIngressController
 	if d.config.IngressProvider == config.IngressProviderKubernetesIngressNGINX {
 		controller = "k8s.io/ingress-nginx"
 	}
@@ -788,16 +788,16 @@ func (d *Deployer) ingressClass() *networkingv1.IngressClass {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: d.config.IngressClassName(),
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelManagedBy: LabelManagedByValue,
 			},
 			Annotations: map[string]string{
 				// Make traefik the default ingress class as a replacement for nginx
-				"ingressclass.kubernetes.io/is-default-class": "true",
+				AnnotationIsDefaultClass: AnnotationIsDefaultClassValue,
 				// spec.controller is immutable — tell resource-manager to delete
 				// and recreate the IngressClass if the value changes.
-				"resources.gardener.cloud/delete-on-invalid-update": "true",
+				"resources.gardener.cloud/delete-on-invalid-update": AnnotationIsDefaultClassValue,
 			},
 		},
 		Spec: networkingv1.IngressClassSpec{
@@ -816,15 +816,15 @@ func (d *Deployer) networkPolicy() *networkingv1.NetworkPolicy {
 			Name:      "traefik-allow-ingress",
 			Namespace: Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/name":     "traefik",
-					"app.kubernetes.io/instance": "traefik",
+					LabelName:     DeploymentName,
+					LabelInstance: DeploymentName,
 				},
 			},
 			PolicyTypes: []networkingv1.PolicyType{
@@ -869,17 +869,17 @@ func (d *Deployer) podDisruptionBudget() *policyv1.PodDisruptionBudget {
 			Name:      DeploymentName,
 			Namespace: Namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":       "traefik",
-				"app.kubernetes.io/instance":   "traefik",
-				"app.kubernetes.io/managed-by": "gardener",
+				LabelName:      DeploymentName,
+				LabelInstance:  DeploymentName,
+				LabelManagedBy: LabelManagedByValue,
 			},
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			MinAvailable: &intstr.IntOrString{Type: intstr.Int, IntVal: 1},
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/name":     "traefik",
-					"app.kubernetes.io/instance": "traefik",
+					LabelName:     DeploymentName,
+					LabelInstance: DeploymentName,
 				},
 			},
 		},

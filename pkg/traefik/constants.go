@@ -23,14 +23,65 @@ const (
 	// SeedManagedResourceName is the name of the seed-class ManagedResource
 	// that contains the DNSRecord for the Traefik ingress wildcard domain.
 	SeedManagedResourceName = "extension-traefik-ingress-dns"
+
+	// LogLevelInfo is the default Traefik log level.
+	LogLevelInfo = "Info"
+
+	// LabelName is the "app.kubernetes.io/name" label key.
+	LabelName = "app.kubernetes.io/name"
+
+	// LabelInstance is the "app.kubernetes.io/instance" label key.
+	LabelInstance = "app.kubernetes.io/instance"
+
+	// LabelComponent is the "app.kubernetes.io/component" label key.
+	LabelComponent = "app.kubernetes.io/component"
+
+	// LabelManagedBy is the "app.kubernetes.io/managed-by" label key.
+	LabelManagedBy = "app.kubernetes.io/managed-by"
+
+	// LabelComponentValue is the value for the ingress-controller component label.
+	LabelComponentValue = "ingress-controller"
+
+	// LabelManagedByValue is the value for the gardener managed-by label.
+	LabelManagedByValue = "gardener"
+
+	// IngressControllerRoleName is the name of the ClusterRole and ClusterRoleBinding for Traefik.
+	IngressControllerRoleName = "traefik-ingress-controller"
+
+	// PingPath is the path used for Traefik health probes.
+	PingPath = "/ping"
+
+	// VerbGet is the "get" RBAC verb.
+	VerbGet = "get"
+
+	// VerbList is the "list" RBAC verb.
+	VerbList = "list"
+
+	// VerbWatch is the "watch" RBAC verb.
+	VerbWatch = "watch"
+
+	// AnnotationIsDefaultClass is the annotation that marks a class as default.
+	AnnotationIsDefaultClass = "ingressclass.kubernetes.io/is-default-class"
+
+	// AnnotationIsDefaultClassValue is the value for the is-default-class annotation.
+	AnnotationIsDefaultClassValue = "true"
+
+	// TraefikIngressController is the controller value for the Traefik ingress class.
+	TraefikIngressController = "traefik.io/ingress-controller"
+
+	// ConfirmationDeletionValue is the value for the deletion confirmation annotation.
+	ConfirmationDeletionValue = "true"
+
+	// IngressClassNGINX is the ingress class name for nginx-compatible mode.
+	IngressClassNGINX = "nginx"
 )
 
 // ValidLogLevels contains the set of log levels supported by Traefik.
 var ValidLogLevels = map[string]struct{}{
-	"Debug": {},
-	"Info":  {},
-	"Warn":  {},
-	"Error": {},
-	"Fatal": {},
-	"Panic": {},
+	"Debug":      {},
+	LogLevelInfo: {},
+	"Warn":       {},
+	"Error":      {},
+	"Fatal":      {},
+	"Panic":      {},
 }
