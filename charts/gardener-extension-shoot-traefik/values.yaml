@@ -128,14 +128,14 @@ securityContext:
 #
 # https://kubernetes.io/docs/concepts/services-networking/service/
 service:
-  # Specifies whether a service should be created
+  # Specifies whether a service should be created. The service exposes the
+  # extension's Prometheus metrics endpoint and is required for the
+  # gardener-resource-manager NetworkPolicy controller to allow scraping
+  # by the seed Prometheus.
   create: true
   # Service type.
   # See: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
-  # Service port.
-  # See: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
 # Resources limits and requests
 #
 # Check the following link for more details.
