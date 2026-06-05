@@ -10,6 +10,7 @@ metadata:
   annotations:
     networking.resources.gardener.cloud/from-all-seed-scrape-targets-allowed-ports: '[{"port":{{ .Values.extension.metrics.bind_address | trimPrefix ":" }},"protocol":"TCP"}]'
     networking.resources.gardener.cloud/namespace-selectors: '[{"matchLabels":{"kubernetes.io/metadata.name":"garden"}}]'
+    networking.resources.gardener.cloud/pod-label-selector-namespace-alias: extensions
 spec:
   type: {{ .Values.service.type }}
   ports:
