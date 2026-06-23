@@ -8,5 +8,5 @@ images:
   resourceId:
     name: traefik
   sourceRepository: github.com/traefik/traefik
-  repository: docker.io/library/traefik
+  repository: europe-docker.pkg.dev/gardener-project/releases/3rd/traefik
   tag: "v3.7.5"
