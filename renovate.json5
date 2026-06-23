@@ -51,6 +51,18 @@
       "automerge": true
     },
     {
+      "matchManagers": ["gomod"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchPackagePatterns": [
+        "^actions/checkout$",
+        "^actions/setup-go$",
+      ],
+      "automerge": true
+    },
+    {
       matchFileNames: [
         'chart/**',
         'cmd/**',
