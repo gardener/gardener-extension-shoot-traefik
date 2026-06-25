@@ -19,21 +19,12 @@ The `gardener-extension-shoot-traefik` deploys Traefik ingress controller to Gar
 
 ## Usage
 
-You can enable the extension for a [Gardener Shoot
-cluster](https://gardener.cloud/docs/glossary/_index#gardener-glossary) by
-updating the `.spec.extensions` of your shoot manifest.
-
-**Important**: The Traefik extension can only be enabled for shoots with `purpose: evaluation`.
-This is enforced by an admission webhook.
+You can enable the extension on a [Gardener Shoot cluster](https://gardener.cloud/docs/glossary/_index#gardener-glossary) by adding it to `.spec.extensions`. The shoot's `spec.purpose` must be `evaluation` — this is enforced by an admission webhook.
 
 ```yaml
 apiVersion: core.gardener.cloud/v1beta1
 kind: Shoot
-metadata:
-  name: my-shoot
-  namespace: garden-my-project
 spec:
-  # Purpose MUST be "evaluation" for Traefik extension
   purpose: evaluation
   extensions:
     - type: shoot-traefik
@@ -41,83 +32,10 @@ spec:
         apiVersion: traefik.extensions.gardener.cloud/v1alpha1
         kind: TraefikConfig
         spec:
-          # Optional: Number of replicas (default: 2)
-          replicas: 2
-          # Optional: Log level (default: Info)
-          # Valid values: Debug, Info, Warn, Error, Fatal, Panic
-          logLevel: Info
-          # Optional: Ingress provider type (default: KubernetesIngress)
-          # Valid values:
-          # - KubernetesIngress: Standard Kubernetes Ingress provider (ingress class: "traefik")
-          # - KubernetesIngressNGINX: NGINX-compatible provider with NGINX annotation support (ingress class: "nginx")
           ingressProvider: KubernetesIngress
-          # Optional: Enable the Traefik API and dashboard (default: false)
-          # WARNING: Not recommended for production — see Dashboard section below.
-          dashboard: false
-  # ... rest of your shoot configuration
 ```
 
-### Configuration Options
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec.replicas` | int32 | `2` | Number of Traefik replicas |
-| `spec.logLevel` | string | `Info` | Traefik log level: `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic` |
-| `spec.ingressProvider` | string | `KubernetesIngress` | Kubernetes Ingress provider type: `KubernetesIngress` or `KubernetesIngressNGINX` |
-| `spec.dashboard` | bool | `false` | Enable the Traefik API and dashboard (not recommended for production) |
-
-### Ingress Provider Types
-
-The extension supports two Kubernetes Ingress provider types:
-
-#### KubernetesIngress (Default)
-
-The standard Kubernetes Ingress provider that implements the core [Kubernetes Ingress specification](https://kubernetes.io/docs/concepts/services-networking/ingress/).
-
-```yaml
-spec:
-  ingressProvider: KubernetesIngress
-```
-
-#### KubernetesIngressNGINX
-
-The NGINX-compatible provider makes it easier to migrate from NGINX Ingress Controller to Traefik with minimal configuration changes. Note that only a subset of NGINX annotations is supported — see the [Traefik NGINX Annotations Support](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx/) page for details.
-
-```yaml
-spec:
-  ingressProvider: KubernetesIngressNGINX
-```
-
-**Note:** When using `KubernetesIngressNGINX`, the ingress class is automatically set to `"nginx"` and the IngressClass resource uses `controller: k8s.io/ingress-nginx` for compatibility with existing Ingress resources. Traefik handles these Ingresses using its NGINX-compatible provider.
-
-**When to use KubernetesIngressNGINX:**
-- You're migrating from NGINX Ingress Controller
-- Your existing Ingress resources use NGINX-specific annotations
-- You want to maintain compatibility with NGINX annotations during the transition
-
-For more information, see:
-- [Traefik Kubernetes Ingress Documentation](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress/)
-- [Traefik NGINX Annotations Support](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx/)
-- [NGINX to Traefik Migration Guide](https://doc.traefik.io/traefik/migrate/nginx-to-traefik/)
-
-### Traefik Dashboard
-
-> **Warning:** Enabling the API and the dashboard in production is not recommended, because it will expose all configuration elements, including sensitive data, for which access should be reserved to administrators.
-
-The Traefik dashboard is disabled by default. To enable it, set `spec.dashboard: true` in the provider config:
-
-```yaml
-spec:
-  dashboard: true
-```
-
-Once the shoot is reconciled, you can access the dashboard by port-forwarding to the Traefik deployment on the shoot cluster:
-
-```bash
-kubectl -n kube-system port-forward deployment/traefik 9000:9000
-```
-
-Then open `http://localhost:9000/dashboard/` in your browser (the trailing `/` is required).
+See [docs/usage/ingress-providers.md](./docs/usage/ingress-providers.md) for the full configuration reference, ingress-provider details, and the dashboard guide.
 
 ## Admission Controller
 
