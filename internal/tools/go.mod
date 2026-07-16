@@ -4,7 +4,7 @@ go 1.26.0
 
 tool (
 	github.com/elastic/crd-ref-docs
-	github.com/gardener/gardener/hack/tools/extension-generator
+	github.com/gardener/gardener/hack/generators/extension-generator
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/google/addlicense
 	github.com/incu6us/goimports-reviser/v3
