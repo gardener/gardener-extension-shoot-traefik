@@ -8,7 +8,7 @@ description: Prepares the release by regenerating the dev setup artifacts.
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@v7.0.0
       with:
         go-version-file: go.mod
     - name: regenerate-dev-setup
