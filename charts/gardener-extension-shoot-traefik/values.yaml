@@ -84,6 +84,19 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
+# Image vector overwrite.
+#
+# When set, the images used by this extension (e.g. the Traefik ingress
+# controller image) are overwritten according to the given image vector.
+# Gardener passes this value during extension deployment, typically to
+# redirect images to a landscape-specific (signed) registry mirror.
+#
+# The value is mounted into the extension container and consumed via the
+# IMAGEVECTOR_OVERWRITE environment variable.
+#
+# https://github.com/gardener/gardener/blob/master/docs/development/component-checklist.md
+# https://gardener.cloud/docs/gardener/deployment/image_vector/
+imageVectorOverwrite: ""
 # Image pull secrets settings.
 #
 # https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
