@@ -449,6 +449,7 @@ func TestClusterRole_RBAC_Permissions(t *testing.T) {
 				"services":       {VerbGet, VerbList, VerbWatch},
 				"endpoints":      {VerbGet, VerbList, VerbWatch},
 				"secrets":        {VerbGet, VerbList, VerbWatch},
+				"configmaps":     {VerbGet, VerbList, VerbWatch},
 				"ingresses":      {VerbGet, VerbList, VerbWatch},
 				"ingressclasses": {VerbGet, VerbList, VerbWatch},
 			}

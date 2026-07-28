@@ -442,7 +442,7 @@ func (d *Deployer) clusterRole() *rbacv1.ClusterRole {
 	rules := []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
-			Resources: []string{"services", "endpoints", "secrets", "nodes"},
+			Resources: []string{"services", "endpoints", "secrets", "nodes", "configmaps"},
 			Verbs:     []string{VerbGet, VerbList, VerbWatch},
 		},
 		{
