@@ -29,7 +29,7 @@ spec:
             minAllowed:
               memory: 64Mi
           updatePolicy:
-            updateMode: Recreate
+            updateMode: InPlaceOrRecreate
   resources:
   - kind: Extension
     type: shoot-traefik
