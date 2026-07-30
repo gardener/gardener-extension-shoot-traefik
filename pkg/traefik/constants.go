@@ -4,6 +4,10 @@
 
 package traefik
 
+import (
+	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
+)
+
 const (
 	// Namespace is the namespace where Traefik will be deployed in the shoot cluster.
 	Namespace = "kube-system"
@@ -84,4 +88,11 @@ var ValidLogLevels = map[string]struct{}{
 	"Error":      {},
 	"Fatal":      {},
 	"Panic":      {},
+}
+
+// ValidHTTPEntrypoints contains the set of HTTP entrypoint modes supported by the extension.
+var ValidHTTPEntrypoints = map[config.HTTPEntrypointType]struct{}{
+	config.HTTPEntrypointEnabled:  {},
+	config.HTTPEntrypointRedirect: {},
+	config.HTTPEntrypointDisabled: {},
 }

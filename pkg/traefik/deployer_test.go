@@ -380,6 +380,144 @@ func TestDeployment_Dashboard(t *testing.T) {
 	}
 }
 
+func TestDeployment_HTTPEntrypoint(t *testing.T) {
+	redirectArgs := []string{
+		"--entrypoints.web.http.redirections.entrypoint.to=websecure",
+		"--entrypoints.web.http.redirections.entrypoint.scheme=https",
+		"--entrypoints.web.http.redirections.entrypoint.permanent=true",
+	}
+
+	tests := []struct {
+		name            string
+		httpEntrypoint  config.HTTPEntrypointType
+		expectedArgs    []string
+		notExpectedArgs []string
+	}{
+		{
+			// The container web entrypoint must always be present for the /ping probes.
+			name:            "Enabled keeps web entrypoint and adds no redirect",
+			httpEntrypoint:  config.HTTPEntrypointEnabled,
+			expectedArgs:    []string{"--entrypoints.web.address=:8000"},
+			notExpectedArgs: redirectArgs,
+		},
+		{
+			name:           "Redirect keeps web entrypoint and adds redirect args",
+			httpEntrypoint: config.HTTPEntrypointRedirect,
+			expectedArgs:   append([]string{"--entrypoints.web.address=:8000"}, redirectArgs...),
+		},
+		{
+			name:            "Disabled keeps web entrypoint (probes) and adds no redirect",
+			httpEntrypoint:  config.HTTPEntrypointDisabled,
+			expectedArgs:    []string{"--entrypoints.web.address=:8000"},
+			notExpectedArgs: redirectArgs,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			imageVec := imagevector.ImageVector{
+				{
+					Name:       ImageName,
+					Repository: new("docker.io/library/traefik"),
+					Tag:        new("v3.6.10"),
+				},
+			}
+
+			config := Config{
+				Replicas:       2,
+				HTTPEntrypoint: tt.httpEntrypoint,
+			}
+
+			deployer := NewDeployer(client, logr.Discard(), config, imageVec)
+			deployment, err := deployer.deployment()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+
+			for _, expectedArg := range tt.expectedArgs {
+				if !slices.Contains(args, expectedArg) {
+					t.Errorf("expected arg %q not found in deployment args: %v", expectedArg, args)
+				}
+			}
+
+			for _, notExpectedArg := range tt.notExpectedArgs {
+				if slices.Contains(args, notExpectedArg) {
+					t.Errorf("unexpected arg %q found in deployment args: %v", notExpectedArg, args)
+				}
+			}
+		})
+	}
+}
+
+func TestService_HTTPEntrypoint(t *testing.T) {
+	tests := []struct {
+		name           string
+		httpEntrypoint config.HTTPEntrypointType
+		expectWebPort  bool
+	}{
+		{
+			name:           "Enabled exposes web port 80",
+			httpEntrypoint: config.HTTPEntrypointEnabled,
+			expectWebPort:  true,
+		},
+		{
+			name:           "Redirect exposes web port 80",
+			httpEntrypoint: config.HTTPEntrypointRedirect,
+			expectWebPort:  true,
+		},
+		{
+			name:           "Disabled omits web port 80",
+			httpEntrypoint: config.HTTPEntrypointDisabled,
+			expectWebPort:  false,
+		},
+		{
+			// service() treats an empty value as non-Disabled; the Enabled default is applied
+			// by the actuator, not here.
+			name:           "empty treated as non-disabled and exposes web port 80",
+			httpEntrypoint: "",
+			expectWebPort:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			deployer := NewDeployer(client, logr.Discard(), Config{HTTPEntrypoint: tt.httpEntrypoint}, imagevector.ImageVector{})
+			svc := deployer.service()
+
+			hasWebPort := false
+			hasWebSecurePort := false
+			for _, p := range svc.Spec.Ports {
+				if p.Name == "web" && p.Port == 80 {
+					hasWebPort = true
+				}
+				if p.Name == "websecure" && p.Port == 443 {
+					hasWebSecurePort = true
+				}
+			}
+
+			// websecure (443) must always be present.
+			if !hasWebSecurePort {
+				t.Errorf("expected websecure port (443) to always be present, ports: %v", svc.Spec.Ports)
+			}
+
+			if tt.expectWebPort && !hasWebPort {
+				t.Errorf("expected web port (80) but it was not found, ports: %v", svc.Spec.Ports)
+			}
+			if !tt.expectWebPort && hasWebPort {
+				t.Errorf("unexpected web port (80) found, ports: %v", svc.Spec.Ports)
+			}
+		})
+	}
+}
+
 func TestClusterRole_RBAC_Permissions(t *testing.T) {
 	tests := []struct {
 		name                 string
@@ -488,6 +626,10 @@ func TestDefaultConfig(t *testing.T) {
 
 	if defaultCfg.IngressProvider != config.IngressProviderKubernetesIngress {
 		t.Errorf("expected default ingress provider to be 'KubernetesIngress', got %q", defaultCfg.IngressProvider)
+	}
+
+	if defaultCfg.HTTPEntrypoint != config.HTTPEntrypointEnabled {
+		t.Errorf("expected default httpEntrypoint to be 'Enabled', got %q", defaultCfg.HTTPEntrypoint)
 	}
 }
 

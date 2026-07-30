@@ -20,6 +20,19 @@ const (
 	IngressProviderKubernetesIngressNGINX IngressProviderType = "KubernetesIngressNGINX"
 )
 
+// HTTPEntrypointType defines how the Traefik LoadBalancer handles plain HTTP (port 80).
+type HTTPEntrypointType string
+
+const (
+	// HTTPEntrypointEnabled exposes the Service port 80 and serves plain HTTP (default).
+	HTTPEntrypointEnabled HTTPEntrypointType = "Enabled"
+	// HTTPEntrypointRedirect exposes the Service port 80 and redirects all HTTP requests to HTTPS (301).
+	HTTPEntrypointRedirect HTTPEntrypointType = "Redirect"
+	// HTTPEntrypointDisabled does not expose the Service port 80. The container web entrypoint (:8000)
+	// is kept regardless, because the /ping health probes depend on it.
+	HTTPEntrypointDisabled HTTPEntrypointType = "Disabled"
+)
+
 // TraefikConfigSpec defines the desired state of [TraefikConfig]
 type TraefikConfigSpec struct {
 	// Replicas is the number of Traefik replicas to deploy.
@@ -46,6 +59,14 @@ type TraefikConfigSpec struct {
 	// configuration elements, including sensitive data, for which access should be reserved to administrators.
 	// Defaults to false if not specified.
 	Dashboard bool `json:"dashboard,omitempty"`
+
+	// HTTPEntrypoint controls how the Traefik LoadBalancer handles plain HTTP (port 80).
+	// Valid values are:
+	// - "Enabled" (default): expose Service port 80 and serve plain HTTP.
+	// - "Redirect": expose Service port 80 and redirect all HTTP requests to HTTPS (301).
+	// - "Disabled": do not expose Service port 80 (HTTPS only).
+	// Defaults to "Enabled" if not specified.
+	HTTPEntrypoint HTTPEntrypointType `json:"httpEntrypoint,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

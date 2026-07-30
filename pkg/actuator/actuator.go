@@ -219,6 +219,12 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 				traefikConfig.LogLevel = cfg.Spec.LogLevel
 			}
 			traefikConfig.Dashboard = cfg.Spec.Dashboard
+			if cfg.Spec.HTTPEntrypoint != "" {
+				if _, ok := traefik.ValidHTTPEntrypoints[cfg.Spec.HTTPEntrypoint]; !ok {
+					return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of Enabled, Redirect, Disabled", cfg.Spec.HTTPEntrypoint)
+				}
+				traefikConfig.HTTPEntrypoint = cfg.Spec.HTTPEntrypoint
+			}
 		}
 	}
 
