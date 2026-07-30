@@ -78,6 +78,15 @@ const (
 
 	// IngressClassNGINX is the ingress class name for nginx-compatible mode.
 	IngressClassNGINX = "nginx"
+
+	// EntrypointWeb is the name of the plain-HTTP entrypoint and its Service/container port.
+	EntrypointWeb = "web"
+
+	// EntrypointWebSecure is the name of the HTTPS entrypoint and its Service/container port.
+	EntrypointWebSecure = "websecure"
+
+	// ArgEntrypointWebAddress is the Traefik argument configuring the web entrypoint address.
+	ArgEntrypointWebAddress = "--entrypoints.web.address=:8000"
 )
 
 // ValidLogLevels contains the set of log levels supported by Traefik.

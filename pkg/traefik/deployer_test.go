@@ -204,7 +204,7 @@ func TestDeployment_IngressProvider(t *testing.T) {
 				testAPIInsecureFalse,
 				"--ping=true",
 				"--metrics.prometheus=true",
-				"--entrypoints.web.address=:8000",
+				ArgEntrypointWebAddress,
 				"--entrypoints.websecure.address=:8443",
 			}
 			for _, commonArg := range commonArgs {
@@ -397,18 +397,18 @@ func TestDeployment_HTTPEntrypoint(t *testing.T) {
 			// The container web entrypoint must always be present for the /ping probes.
 			name:            "Enabled keeps web entrypoint and adds no redirect",
 			httpEntrypoint:  config.HTTPEntrypointEnabled,
-			expectedArgs:    []string{"--entrypoints.web.address=:8000"},
+			expectedArgs:    []string{ArgEntrypointWebAddress},
 			notExpectedArgs: redirectArgs,
 		},
 		{
 			name:           "Redirect keeps web entrypoint and adds redirect args",
 			httpEntrypoint: config.HTTPEntrypointRedirect,
-			expectedArgs:   append([]string{"--entrypoints.web.address=:8000"}, redirectArgs...),
+			expectedArgs:   append([]string{ArgEntrypointWebAddress}, redirectArgs...),
 		},
 		{
 			name:            "Disabled keeps web entrypoint (probes) and adds no redirect",
 			httpEntrypoint:  config.HTTPEntrypointDisabled,
-			expectedArgs:    []string{"--entrypoints.web.address=:8000"},
+			expectedArgs:    []string{ArgEntrypointWebAddress},
 			notExpectedArgs: redirectArgs,
 		},
 	}
@@ -495,10 +495,10 @@ func TestService_HTTPEntrypoint(t *testing.T) {
 			hasWebPort := false
 			hasWebSecurePort := false
 			for _, p := range svc.Spec.Ports {
-				if p.Name == "web" && p.Port == 80 {
+				if p.Name == EntrypointWeb && p.Port == 80 {
 					hasWebPort = true
 				}
-				if p.Name == "websecure" && p.Port == 443 {
+				if p.Name == EntrypointWebSecure && p.Port == 443 {
 					hasWebSecurePort = true
 				}
 			}

@@ -568,7 +568,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		"--ping.entrypoint=web",
 		"--metrics.prometheus=true",
 		"--metrics.prometheus.entrypoint=metrics",
-		"--entrypoints.web.address=:8000",
+		ArgEntrypointWebAddress,
 		"--entrypoints.websecure.address=:8443",
 		"--entrypoints.metrics.address=:9100",
 		fmt.Sprintf("--log.level=%s", d.config.LogLevel),
@@ -609,12 +609,12 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 
 	ports := []corev1.ContainerPort{
 		{
-			Name:          "web",
+			Name:          EntrypointWeb,
 			ContainerPort: 8000,
 			Protocol:      corev1.ProtocolTCP,
 		},
 		{
-			Name:          "websecure",
+			Name:          EntrypointWebSecure,
 			ContainerPort: 8443,
 			Protocol:      corev1.ProtocolTCP,
 		},
@@ -750,18 +750,18 @@ func (d *Deployer) service() *corev1.Service {
 	// LoadBalancer can accept the plain-HTTP request it then redirects to HTTPS.
 	ports := []corev1.ServicePort{
 		{
-			Name:       "websecure",
+			Name:       EntrypointWebSecure,
 			Port:       443,
-			TargetPort: intstr.FromString("websecure"),
+			TargetPort: intstr.FromString(EntrypointWebSecure),
 			Protocol:   corev1.ProtocolTCP,
 		},
 	}
 	if d.config.HTTPEntrypoint != config.HTTPEntrypointDisabled {
 		ports = append([]corev1.ServicePort{
 			{
-				Name:       "web",
+				Name:       EntrypointWeb,
 				Port:       80,
-				TargetPort: intstr.FromString("web"),
+				TargetPort: intstr.FromString(EntrypointWeb),
 				Protocol:   corev1.ProtocolTCP,
 			},
 		}, ports...)
