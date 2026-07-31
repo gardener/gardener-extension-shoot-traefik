@@ -143,6 +143,63 @@ var _ = Describe("Shoot Validator", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("evaluation"))
 		})
+
+		It("should deny shoot with the nginx-ingress addon enabled", func() {
+			purpose := gardencorev1beta1.ShootPurposeEvaluation
+			shoot := &gardencorev1beta1.Shoot{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      testShootName,
+					Namespace: testNamespace,
+				},
+				Spec: gardencorev1beta1.ShootSpec{
+					Purpose: &purpose,
+					Addons: &gardencorev1beta1.Addons{
+						NginxIngress: &gardencorev1beta1.NginxIngress{
+							Addon: gardencorev1beta1.Addon{Enabled: true},
+						},
+					},
+					Extensions: []gardencorev1beta1.Extension{
+						{Type: ExtensionType},
+					},
+				},
+			}
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("nginx-ingress addon"))
+		})
+
+		It("should allow shoot with the nginx-ingress addon disabled", func() {
+			purpose := gardencorev1beta1.ShootPurposeEvaluation
+			shoot := &gardencorev1beta1.Shoot{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      testShootName,
+					Namespace: testNamespace,
+				},
+				Spec: gardencorev1beta1.ShootSpec{
+					Purpose: &purpose,
+					Addons: &gardencorev1beta1.Addons{
+						NginxIngress: &gardencorev1beta1.NginxIngress{
+							Addon: gardencorev1beta1.Addon{Enabled: false},
+						},
+					},
+					Extensions: []gardencorev1beta1.Extension{
+						{Type: ExtensionType},
+					},
+				},
+			}
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 
 	Context("when shoot has traefik extension with providerConfig", func() {
