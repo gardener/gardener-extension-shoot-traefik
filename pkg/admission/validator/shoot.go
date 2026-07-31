@@ -70,8 +70,9 @@ func (v *shootValidator) Validate(ctx context.Context, newClient, old client.Obj
 	return v.validateShoot(shoot)
 }
 
-// validateShoot validates that if the Traefik extension is enabled,
-// the shoot must have purpose "evaluation" and a valid TraefikConfig.
+// validateShoot validates that if the Traefik extension is enabled, the shoot must have
+// purpose "evaluation", the nginx-ingress addon must not be enabled, and the TraefikConfig
+// must be valid.
 func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
 	// Find the Traefik extension and check whether it is enabled.
 	var traefikExtension *gardencorev1beta1.Extension
@@ -103,6 +104,16 @@ func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
 				"Current purpose: %s. Traefik acts as a replacement for the nginx ingress controller "+
 				"and is only supported for evaluation clusters",
 			purposeStr,
+		)
+	}
+
+	// The traefik extension is a replacement for the nginx-ingress addon, so both must not
+	// be enabled at the same time.
+	if shoot.Spec.Addons != nil && shoot.Spec.Addons.NginxIngress != nil && shoot.Spec.Addons.NginxIngress.Enabled { //nolint:staticcheck // SA1019: Spec.Addons is deprecated but still needs to be validated.
+		return fmt.Errorf(
+			"traefik extension cannot be enabled while the nginx-ingress addon " +
+				"(spec.addons.nginxIngress.enabled) is enabled. Traefik acts as a replacement for the " +
+				"nginx ingress controller; please disable the nginx-ingress addon first",
 		)
 	}
 
