@@ -13,8 +13,12 @@ import (
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
+	"github.com/gardener/gardener-extension-shoot-traefik/pkg/traefik"
 )
 
 const (
@@ -67,23 +71,23 @@ func (v *shootValidator) Validate(ctx context.Context, newClient, old client.Obj
 }
 
 // validateShoot validates that if the Traefik extension is enabled,
-// the shoot must have purpose "evaluation".
+// the shoot must have purpose "evaluation" and a valid TraefikConfig.
 func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
-	// Check if the Traefik extension is configured and enabled
-	hasTraefikExtension := false
-	for _, ext := range shoot.Spec.Extensions {
+	// Find the Traefik extension and check whether it is enabled.
+	var traefikExtension *gardencorev1beta1.Extension
+	for i, ext := range shoot.Spec.Extensions {
 		if ext.Type == ExtensionType {
 			if ext.Disabled != nil && *ext.Disabled {
 				return nil
 			}
-			hasTraefikExtension = true
+			traefikExtension = &shoot.Spec.Extensions[i]
 
 			break
 		}
 	}
 
 	// If no Traefik extension, validation passes
-	if !hasTraefikExtension {
+	if traefikExtension == nil {
 		return nil
 	}
 
@@ -100,6 +104,29 @@ func (v *shootValidator) validateShoot(shoot *gardencorev1beta1.Shoot) error {
 				"and is only supported for evaluation clusters",
 			purposeStr,
 		)
+	}
+
+	return v.validateProviderConfig(traefikExtension)
+}
+
+// validateProviderConfig decodes and validates the TraefikConfig carried in the
+// extension's providerConfig, if any is set.
+func (v *shootValidator) validateProviderConfig(ext *gardencorev1beta1.Extension) error {
+	if ext.ProviderConfig == nil {
+		return nil
+	}
+
+	cfg := &config.TraefikConfig{}
+	if err := runtime.DecodeInto(v.decoder, ext.ProviderConfig.Raw, cfg); err != nil {
+		return fmt.Errorf("failed to decode traefik providerConfig: %w", err)
+	}
+
+	if cfg.Spec.LogLevel != "" && !traefik.ValidLogLevels.Has(cfg.Spec.LogLevel) {
+		return fmt.Errorf("invalid traefik logLevel %q: must be one of %v", cfg.Spec.LogLevel, sets.List(traefik.ValidLogLevels))
+	}
+
+	if cfg.Spec.HTTPEntrypoint != "" && !traefik.ValidHTTPEntrypoints.Has(cfg.Spec.HTTPEntrypoint) {
+		return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of %v", cfg.Spec.HTTPEntrypoint, sets.List(traefik.ValidHTTPEntrypoints))
 	}
 
 	return nil

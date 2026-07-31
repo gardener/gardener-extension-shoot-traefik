@@ -4,6 +4,12 @@
 
 package traefik
 
+import (
+	"k8s.io/apimachinery/pkg/util/sets"
+
+	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
+)
+
 const (
 	// Namespace is the namespace where Traefik will be deployed in the shoot cluster.
 	Namespace = "kube-system"
@@ -74,14 +80,30 @@ const (
 
 	// IngressClassNGINX is the ingress class name for nginx-compatible mode.
 	IngressClassNGINX = "nginx"
+
+	// EntrypointWeb is the name of the plain-HTTP entrypoint and its Service/container port.
+	EntrypointWeb = "web"
+
+	// EntrypointWebSecure is the name of the HTTPS entrypoint and its Service/container port.
+	EntrypointWebSecure = "websecure"
+
+	// ArgEntrypointWebAddress is the Traefik argument configuring the web entrypoint address.
+	ArgEntrypointWebAddress = "--entrypoints.web.address=:8000"
 )
 
 // ValidLogLevels contains the set of log levels supported by Traefik.
-var ValidLogLevels = map[string]struct{}{
-	"Debug":      {},
-	LogLevelInfo: {},
-	"Warn":       {},
-	"Error":      {},
-	"Fatal":      {},
-	"Panic":      {},
-}
+var ValidLogLevels = sets.New(
+	"Debug",
+	"Info",
+	"Warn",
+	"Error",
+	"Fatal",
+	"Panic",
+)
+
+// ValidHTTPEntrypoints contains the set of HTTP entrypoint modes supported by the extension.
+var ValidHTTPEntrypoints = sets.New(
+	config.HTTPEntrypointEnabled,
+	config.HTTPEntrypointRedirect,
+	config.HTTPEntrypointDisabled,
+)

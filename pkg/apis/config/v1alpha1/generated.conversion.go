@@ -70,6 +70,7 @@ func autoConvert_v1alpha1_TraefikConfigSpec_To_config_TraefikConfigSpec(in *Trae
 	out.IngressProvider = config.IngressProviderType(in.IngressProvider)
 	out.LogLevel = in.LogLevel
 	out.Dashboard = in.Dashboard
+	out.HTTPEntrypoint = config.HTTPEntrypointType(in.HTTPEntrypoint)
 	return nil
 }
 
@@ -83,6 +84,7 @@ func autoConvert_config_TraefikConfigSpec_To_v1alpha1_TraefikConfigSpec(in *conf
 	out.IngressProvider = IngressProviderType(in.IngressProvider)
 	out.LogLevel = in.LogLevel
 	out.Dashboard = in.Dashboard
+	out.HTTPEntrypoint = HTTPEntrypointType(in.HTTPEntrypoint)
 	return nil
 }
 

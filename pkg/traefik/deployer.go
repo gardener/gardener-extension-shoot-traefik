@@ -93,6 +93,8 @@ type Config struct {
 	LogLevel string
 	// Dashboard enables the Traefik dashboard on port 9000.
 	Dashboard bool
+	// HTTPEntrypoint controls how the LoadBalancer Service handles plain HTTP (port 80).
+	HTTPEntrypoint config.HTTPEntrypointType
 }
 
 // DefaultConfig returns the default configuration for Traefik.
@@ -101,6 +103,7 @@ func DefaultConfig() Config {
 		Replicas:        2,
 		IngressProvider: config.IngressProviderKubernetesIngress,
 		LogLevel:        LogLevelInfo,
+		HTTPEntrypoint:  config.HTTPEntrypointEnabled,
 	}
 }
 
@@ -565,7 +568,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		"--ping.entrypoint=web",
 		"--metrics.prometheus=true",
 		"--metrics.prometheus.entrypoint=metrics",
-		"--entrypoints.web.address=:8000",
+		ArgEntrypointWebAddress,
 		"--entrypoints.websecure.address=:8443",
 		"--entrypoints.metrics.address=:9100",
 		fmt.Sprintf("--log.level=%s", d.config.LogLevel),
@@ -573,6 +576,16 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 
 	if d.config.Dashboard {
 		args = append(args, "--entrypoints.traefik.address=:9000")
+	}
+
+	// In Redirect mode, permanently redirect all plain-HTTP requests on the web entrypoint to HTTPS.
+	// The web entrypoint itself (:8000) always stays, since the /ping health probes depend on it.
+	if d.config.HTTPEntrypoint == config.HTTPEntrypointRedirect {
+		args = append(args,
+			"--entrypoints.web.http.redirections.entrypoint.to=websecure",
+			"--entrypoints.web.http.redirections.entrypoint.scheme=https",
+			"--entrypoints.web.http.redirections.entrypoint.permanent=true",
+		)
 	}
 
 	ingressClass := d.config.IngressClassName()
@@ -596,12 +609,12 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 
 	ports := []corev1.ContainerPort{
 		{
-			Name:          "web",
+			Name:          EntrypointWeb,
 			ContainerPort: 8000,
 			Protocol:      corev1.ProtocolTCP,
 		},
 		{
-			Name:          "websecure",
+			Name:          EntrypointWebSecure,
 			ContainerPort: 8443,
 			Protocol:      corev1.ProtocolTCP,
 		},
@@ -732,6 +745,28 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 }
 
 func (d *Deployer) service() *corev1.Service {
+	// The websecure (443) port is always exposed. The web (80) port is exposed unless
+	// the HTTP entrypoint is explicitly disabled; in Redirect mode it must stay open so the
+	// LoadBalancer can accept the plain-HTTP request it then redirects to HTTPS.
+	ports := []corev1.ServicePort{
+		{
+			Name:       EntrypointWebSecure,
+			Port:       443,
+			TargetPort: intstr.FromString(EntrypointWebSecure),
+			Protocol:   corev1.ProtocolTCP,
+		},
+	}
+	if d.config.HTTPEntrypoint != config.HTTPEntrypointDisabled {
+		ports = append([]corev1.ServicePort{
+			{
+				Name:       EntrypointWeb,
+				Port:       80,
+				TargetPort: intstr.FromString(EntrypointWeb),
+				Protocol:   corev1.ProtocolTCP,
+			},
+		}, ports...)
+	}
+
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -753,20 +788,7 @@ func (d *Deployer) service() *corev1.Service {
 				LabelName:     DeploymentName,
 				LabelInstance: DeploymentName,
 			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "web",
-					Port:       80,
-					TargetPort: intstr.FromString("web"),
-					Protocol:   corev1.ProtocolTCP,
-				},
-				{
-					Name:       "websecure",
-					Port:       443,
-					TargetPort: intstr.FromString("websecure"),
-					Protocol:   corev1.ProtocolTCP,
-				},
-			},
+			Ports: ports,
 		},
 	}
 }

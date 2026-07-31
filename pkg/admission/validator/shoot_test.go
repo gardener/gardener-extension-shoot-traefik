@@ -15,6 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	configinstall "github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config/install"
 )
 
 const (
@@ -38,6 +40,7 @@ var _ = Describe("Shoot Validator", func() {
 	BeforeEach(func() {
 		scheme = runtime.NewScheme()
 		Expect(gardencorev1beta1.AddToScheme(scheme)).To(Succeed())
+		configinstall.Install(scheme)
 
 		client := fake.NewClientBuilder().WithScheme(scheme).Build()
 		decoder := serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
@@ -139,6 +142,61 @@ var _ = Describe("Shoot Validator", func() {
 			err := validator.Validate(context.Background(), shoot, nil)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("evaluation"))
+		})
+	})
+
+	Context("when shoot has traefik extension with providerConfig", func() {
+		newShootWithProviderConfig := func(rawConfig string) *gardencorev1beta1.Shoot {
+			purpose := gardencorev1beta1.ShootPurposeEvaluation
+			ext := gardencorev1beta1.Extension{Type: ExtensionType}
+			if rawConfig != "" {
+				ext.ProviderConfig = &runtime.RawExtension{Raw: []byte(rawConfig)}
+			}
+
+			return &gardencorev1beta1.Shoot{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: testAPIVersion,
+					Kind:       testKind,
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      testShootName,
+					Namespace: testNamespace,
+				},
+				Spec: gardencorev1beta1.ShootSpec{
+					Purpose:    &purpose,
+					Extensions: []gardencorev1beta1.Extension{ext},
+				},
+			}
+		}
+
+		It("should allow a valid httpEntrypoint", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha1","kind":"TraefikConfig","spec":{"httpEntrypoint":"Redirect"}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should deny an invalid httpEntrypoint", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha1","kind":"TraefikConfig","spec":{"httpEntrypoint":"Bogus"}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("httpEntrypoint"))
+		})
+
+		It("should deny an invalid logLevel", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha1","kind":"TraefikConfig","spec":{"logLevel":"Loud"}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("logLevel"))
+		})
+
+		It("should allow an empty httpEntrypoint (defaulted later)", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha1","kind":"TraefikConfig","spec":{"replicas":3}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
