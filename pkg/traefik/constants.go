@@ -5,6 +5,8 @@
 package traefik
 
 import (
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
 )
 
@@ -90,18 +92,18 @@ const (
 )
 
 // ValidLogLevels contains the set of log levels supported by Traefik.
-var ValidLogLevels = map[string]struct{}{
-	"Debug":      {},
-	LogLevelInfo: {},
-	"Warn":       {},
-	"Error":      {},
-	"Fatal":      {},
-	"Panic":      {},
-}
+var ValidLogLevels = sets.New(
+	"Debug",
+	"Info",
+	"Warn",
+	"Error",
+	"Fatal",
+	"Panic",
+)
 
 // ValidHTTPEntrypoints contains the set of HTTP entrypoint modes supported by the extension.
-var ValidHTTPEntrypoints = map[config.HTTPEntrypointType]struct{}{
-	config.HTTPEntrypointEnabled:  {},
-	config.HTTPEntrypointRedirect: {},
-	config.HTTPEntrypointDisabled: {},
-}
+var ValidHTTPEntrypoints = sets.New(
+	config.HTTPEntrypointEnabled,
+	config.HTTPEntrypointRedirect,
+	config.HTTPEntrypointDisabled,
+)

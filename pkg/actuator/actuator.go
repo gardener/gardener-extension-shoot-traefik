@@ -213,14 +213,14 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 				traefikConfig.IngressProvider = cfg.Spec.IngressProvider
 			}
 			if cfg.Spec.LogLevel != "" {
-				if _, ok := traefik.ValidLogLevels[cfg.Spec.LogLevel]; !ok {
+				if !traefik.ValidLogLevels.Has(cfg.Spec.LogLevel) {
 					return fmt.Errorf("invalid traefik log level %q: must be one of Debug, Info, Warn, Error, Fatal, Panic", cfg.Spec.LogLevel)
 				}
 				traefikConfig.LogLevel = cfg.Spec.LogLevel
 			}
 			traefikConfig.Dashboard = cfg.Spec.Dashboard
 			if cfg.Spec.HTTPEntrypoint != "" {
-				if _, ok := traefik.ValidHTTPEntrypoints[cfg.Spec.HTTPEntrypoint]; !ok {
+				if !traefik.ValidHTTPEntrypoints.Has(cfg.Spec.HTTPEntrypoint) {
 					return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of Enabled, Redirect, Disabled", cfg.Spec.HTTPEntrypoint)
 				}
 				traefikConfig.HTTPEntrypoint = cfg.Spec.HTTPEntrypoint
