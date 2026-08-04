@@ -595,6 +595,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 			"--providers.kubernetesingress=true",
 			fmt.Sprintf("--providers.kubernetesingress.ingressclass=%s", ingressClass),
 			"--providers.kubernetesingress.ingressendpoint.publishedservice=kube-system/traefik",
+			"--providers.kubernetescrd=true",
 			"--providers.kubernetescrd.allowcrossnamespace=true",
 		)
 	}

@@ -122,6 +122,7 @@ func TestDeployment_IngressProvider(t *testing.T) {
 				"--providers.kubernetesingress=true",
 				"--providers.kubernetesingress.ingressclass=traefik",
 				"--providers.kubernetesingress.ingressendpoint.publishedservice=kube-system/traefik",
+				"--providers.kubernetescrd=true",
 				"--providers.kubernetescrd.allowcrossnamespace=true",
 			},
 			notExpectedArgs: []string{
