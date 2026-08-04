@@ -571,7 +571,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		ArgEntrypointWebAddress,
 		"--entrypoints.websecure.address=:8443",
 		"--entrypoints.metrics.address=:9100",
-		"global.checknewversion=false",
+		"--global.checknewversion=false",
 		fmt.Sprintf("--log.level=%s", d.config.LogLevel),
 	}
 
