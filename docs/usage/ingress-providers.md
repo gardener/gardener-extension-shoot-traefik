@@ -150,8 +150,7 @@ spec:
 
 All fields live at the top level of `providerConfig` (`apiVersion: traefik.extensions.gardener.cloud/v1alpha2`, `kind: TraefikConfig`).
 
-> [!NOTE]
-> The older `v1alpha1` API nested these fields under a `spec:` field. It is deprecated but still accepted for existing shoots and converted transparently; new shoots should use `v1alpha2`.
+> The older `v1alpha1` API nested these fields under a `spec` field. It is deprecated but still accepted for existing shoots and converted transparently; new shoots should use `v1alpha2`.
 
 | Field | Type | Default | Description |
 | ----- | ---- | ------- | ----------- |

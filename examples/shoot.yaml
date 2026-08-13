@@ -42,9 +42,6 @@ spec:
         # - "Redirect": expose Service port 80 and redirect HTTP to HTTPS (301)
         # - "Disabled": do not expose Service port 80 (HTTPS only)
         # httpEntrypoint: Enabled
-        #
-        # NOTE: The v1alpha1 API (which nested these fields under a "spec:" field) is
-        # deprecated but still accepted for existing shoots. New shoots should use v1alpha2.
   cloudProfile:
     name: local
     kind: CloudProfile
