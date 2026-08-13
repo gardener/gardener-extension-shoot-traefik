@@ -29,10 +29,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          ingressProvider: KubernetesIngress
+        ingressProvider: KubernetesIngress
 ```
 
 See [docs/usage/ingress-providers.md](./docs/usage/ingress-providers.md) for the full configuration reference, ingress-provider details, and the dashboard guide.

@@ -206,24 +206,24 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 			logger.Error(err, "failed to decode provider config, using defaults")
 		} else {
 			// Apply custom configuration
-			if cfg.Spec.Replicas > 0 {
-				traefikConfig.Replicas = cfg.Spec.Replicas
+			if cfg.Replicas > 0 {
+				traefikConfig.Replicas = cfg.Replicas
 			}
-			if cfg.Spec.IngressProvider != "" {
-				traefikConfig.IngressProvider = cfg.Spec.IngressProvider
+			if cfg.IngressProvider != "" {
+				traefikConfig.IngressProvider = cfg.IngressProvider
 			}
-			if cfg.Spec.LogLevel != "" {
-				if !traefik.ValidLogLevels.Has(cfg.Spec.LogLevel) {
-					return fmt.Errorf("invalid traefik log level %q: must be one of Debug, Info, Warn, Error, Fatal, Panic", cfg.Spec.LogLevel)
+			if cfg.LogLevel != "" {
+				if !traefik.ValidLogLevels.Has(cfg.LogLevel) {
+					return fmt.Errorf("invalid traefik log level %q: must be one of Debug, Info, Warn, Error, Fatal, Panic", cfg.LogLevel)
 				}
-				traefikConfig.LogLevel = cfg.Spec.LogLevel
+				traefikConfig.LogLevel = cfg.LogLevel
 			}
-			traefikConfig.Dashboard = cfg.Spec.Dashboard
-			if cfg.Spec.HTTPEntrypoint != "" {
-				if !traefik.ValidHTTPEntrypoints.Has(cfg.Spec.HTTPEntrypoint) {
-					return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of Enabled, Redirect, Disabled", cfg.Spec.HTTPEntrypoint)
+			traefikConfig.Dashboard = cfg.Dashboard
+			if cfg.HTTPEntrypoint != "" {
+				if !traefik.ValidHTTPEntrypoints.Has(cfg.HTTPEntrypoint) {
+					return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of Enabled, Redirect, Disabled", cfg.HTTPEntrypoint)
 				}
-				traefikConfig.HTTPEntrypoint = cfg.Spec.HTTPEntrypoint
+				traefikConfig.HTTPEntrypoint = cfg.HTTPEntrypoint
 			}
 		}
 	}

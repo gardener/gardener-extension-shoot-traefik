@@ -33,8 +33,17 @@ const (
 	HTTPEntrypointDisabled HTTPEntrypointType = "Disabled"
 )
 
-// TraefikConfigSpec defines the desired state of [TraefikConfig]
-type TraefikConfigSpec struct {
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// TraefikConfig is the configuration schema for the Traefik extension.
+// This extension deploys Traefik ingress controller to shoot clusters
+// as a replacement for the nginx-ingress-controller which is out of maintenance.
+//
+// Following the convention of other extension providerConfig APIs, the configuration
+// fields live at the top level with no spec/status wrapper.
+type TraefikConfig struct {
+	metav1.TypeMeta `json:",inline"`
+
 	// Replicas is the number of Traefik replicas to deploy.
 	// Defaults to 2 if not specified.
 	Replicas int32 `json:"replicas,omitempty"`
@@ -67,16 +76,4 @@ type TraefikConfigSpec struct {
 	// - "Disabled": do not expose Service port 80 (HTTPS only).
 	// Defaults to "Enabled" if not specified.
 	HTTPEntrypoint HTTPEntrypointType `json:"httpEntrypoint,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// TraefikConfig is the configuration schema for the Traefik extension.
-// This extension deploys Traefik ingress controller to shoot clusters
-// as a replacement for the nginx-ingress-controller which is out of maintenance.
-type TraefikConfig struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// Spec provides the Traefik extension configuration spec.
-	Spec TraefikConfigSpec `json:"spec"`
 }

@@ -255,6 +255,29 @@ var _ = Describe("Shoot Validator", func() {
 			err := validator.Validate(context.Background(), shoot, nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("should allow a valid httpEntrypoint in the flat v1alpha2 form", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha2","kind":"TraefikConfig","httpEntrypoint":"Redirect"}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should deny an invalid httpEntrypoint in the flat v1alpha2 form", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha2","kind":"TraefikConfig","httpEntrypoint":"Bogus"}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("httpEntrypoint"))
+		})
+
+		It("should deny an invalid logLevel in the flat v1alpha2 form", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha2","kind":"TraefikConfig","logLevel":"Loud"}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("logLevel"))
+		})
 	})
 
 	Context("when shoot does not have traefik extension", func() {

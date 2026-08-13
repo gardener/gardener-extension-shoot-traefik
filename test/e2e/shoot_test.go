@@ -143,12 +143,10 @@ func newShootObject(name, ingressProvider string) *gardencorev1beta1.Shoot {
 					Type: "shoot-traefik",
 					ProviderConfig: &runtime.RawExtension{
 						Raw: mustMarshalJSON(map[string]any{
-							jsonKeyAPIVersion: "traefik.extensions.gardener.cloud/v1alpha1",
+							jsonKeyAPIVersion: "traefik.extensions.gardener.cloud/v1alpha2",
 							jsonKeyKind:       "TraefikConfig",
-							"spec": map[string]any{
-								"replicas":        2,
-								"ingressProvider": ingressProvider,
-							},
+							"replicas":        2,
+							"ingressProvider": ingressProvider,
 						}),
 					},
 				},

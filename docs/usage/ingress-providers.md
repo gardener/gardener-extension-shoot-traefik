@@ -24,10 +24,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          ingressProvider: KubernetesIngress
+        ingressProvider: KubernetesIngress
 ```
 
 Once the shoot reconciles, Traefik runs in the shoot's `kube-system` namespace and is exposed by a `LoadBalancer` Service. You can inspect it with the shoot kubeconfig:
@@ -57,10 +56,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          ingressProvider: KubernetesIngressNGINX
+        ingressProvider: KubernetesIngressNGINX
 ...
 ```
 
@@ -75,10 +73,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          replicas: 3
+        replicas: 3
 ...
 ```
 
@@ -93,10 +90,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          logLevel: Debug
+        logLevel: Debug
 ...
 ```
 
@@ -119,10 +115,9 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          dashboard: true
+        dashboard: true
 ...
 ```
 
@@ -145,16 +140,18 @@ spec:
   extensions:
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          httpEntrypoint: Redirect
+        httpEntrypoint: Redirect
 ...
 ```
 
 ## Configuration Reference
 
-All fields live under `providerConfig.spec` (`apiVersion: traefik.extensions.gardener.cloud/v1alpha1`, `kind: TraefikConfig`).
+All fields live at the top level of `providerConfig` (`apiVersion: traefik.extensions.gardener.cloud/v1alpha2`, `kind: TraefikConfig`).
+
+> [!NOTE]
+> The older `v1alpha1` API nested these fields under a `spec:` field. It is deprecated but still accepted for existing shoots and converted transparently; new shoots should use `v1alpha2`.
 
 | Field | Type | Default | Description |
 | ----- | ---- | ------- | ----------- |
