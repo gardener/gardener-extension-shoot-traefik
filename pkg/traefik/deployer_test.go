@@ -776,14 +776,7 @@ func TestDeployment_PrivilegedPorts(t *testing.T) {
 	if sc == nil {
 		t.Fatal("expected security context but got nil")
 	}
-	hasNetBindService := false
-	for _, cap := range sc.Capabilities.Add {
-		if cap == "NET_BIND_SERVICE" {
-			hasNetBindService = true
-			break
-		}
-	}
-	if !hasNetBindService {
+	if !slices.Contains(sc.Capabilities.Add, "NET_BIND_SERVICE") {
 		t.Error("expected NET_BIND_SERVICE capability to be added")
 	}
 }
