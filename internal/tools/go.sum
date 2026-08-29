@@ -454,8 +454,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20240805132620-81f5be970eca h1:T54Ema1
 github.com/ianlancetaylor/demangle v0.0.0-20240805132620-81f5be970eca/go.mod h1:gx7rwoVhcfuVKG5uya9Hs3Sxj7EIvldVofAWIUtGouw=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/incu6us/goimports-reviser/v3 v3.13.0 h1:SziHk60/tT9E59lVD1lQP7ot5avLpteriGUds6v63Ng=
-github.com/incu6us/goimports-reviser/v3 v3.13.0/go.mod h1:XW/EFSqrGfm/6fYU0YJ+i0RPb26qN6Dt39Cj5BqIZjo=
+github.com/incu6us/goimports-reviser/v3 v3.13.1 h1:ylfs85EH7448Pyk5O88GXFa1L94YdFhxvWJUi4/H/js=
+github.com/incu6us/goimports-reviser/v3 v3.13.1/go.mod h1:XW/EFSqrGfm/6fYU0YJ+i0RPb26qN6Dt39Cj5BqIZjo=
 github.com/invopop/jsonschema v0.14.0 h1:MHQqLhvpNUZfw+hM3AZDYK7jxO8FZoQeQM77g8iyZjg=
 github.com/invopop/jsonschema v0.14.0/go.mod h1:ygm6C2EaVNMBDPpaPlnOA2pFAxBnxGjFlMZABxm9n2I=
 github.com/jgautheron/goconst v1.10.0 h1:Ptt+OoE4NaEWKhLrWrrN3IpZdGLiqaf7WLnEX/iv4Jw=
