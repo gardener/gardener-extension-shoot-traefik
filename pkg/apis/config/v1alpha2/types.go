@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: Contributors to the Gardener project
+// SPDX-FileCopyrightText: SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package config
+package v1alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,8 +39,7 @@ const (
 // This extension deploys Traefik ingress controller to shoot clusters
 // as a replacement for the nginx-ingress-controller which is out of maintenance.
 //
-// Following the convention of other extension providerConfig APIs, the configuration
-// fields live at the top level with no spec/status wrapper.
+// The configuration fields live at the top level with no spec/status wrapper.
 type TraefikConfig struct {
 	metav1.TypeMeta `json:",inline"`
 

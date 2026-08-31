@@ -74,6 +74,12 @@ type TraefikConfigSpec struct {
 // TraefikConfig is the configuration schema for the Traefik extension.
 // This extension deploys Traefik ingress controller to shoot clusters
 // as a replacement for the nginx-ingress-controller which is out of maintenance.
+//
+// Deprecated: This version nests the configuration under a "spec" field. Use the
+// v1alpha2 version, which places the configuration fields at the top level (no "spec"
+// wrapper), following the convention of other Gardener extension providerConfig APIs.
+// v1alpha1 is still accepted for backwards compatibility with existing shoots and is
+// converted transparently.
 type TraefikConfig struct {
 	metav1.TypeMeta `json:",inline"`
 

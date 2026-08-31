@@ -132,12 +132,12 @@ func (v *shootValidator) validateProviderConfig(ext *gardencorev1beta1.Extension
 		return fmt.Errorf("failed to decode traefik providerConfig: %w", err)
 	}
 
-	if cfg.Spec.LogLevel != "" && !traefik.ValidLogLevels.Has(cfg.Spec.LogLevel) {
-		return fmt.Errorf("invalid traefik logLevel %q: must be one of %v", cfg.Spec.LogLevel, sets.List(traefik.ValidLogLevels))
+	if cfg.LogLevel != "" && !traefik.ValidLogLevels.Has(cfg.LogLevel) {
+		return fmt.Errorf("invalid traefik logLevel %q: must be one of %v", cfg.LogLevel, sets.List(traefik.ValidLogLevels))
 	}
 
-	if cfg.Spec.HTTPEntrypoint != "" && !traefik.ValidHTTPEntrypoints.Has(cfg.Spec.HTTPEntrypoint) {
-		return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of %v", cfg.Spec.HTTPEntrypoint, sets.List(traefik.ValidHTTPEntrypoints))
+	if cfg.HTTPEntrypoint != "" && !traefik.ValidHTTPEntrypoints.Has(cfg.HTTPEntrypoint) {
+		return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of %v", cfg.HTTPEntrypoint, sets.List(traefik.ValidHTTPEntrypoints))
 	}
 
 	return nil

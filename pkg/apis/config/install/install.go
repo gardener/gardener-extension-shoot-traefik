@@ -13,11 +13,17 @@ import (
 
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config/v1alpha1"
+	"github.com/gardener/gardener-extension-shoot-traefik/pkg/apis/config/v1alpha2"
 )
 
 // Install registers the API group and adds types to a scheme
 func Install(scheme *runtime.Scheme) {
 	utilruntime.Must(config.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.Install(scheme))
-	utilruntime.Must(scheme.SetVersionPriority(schema.GroupVersion(v1alpha1.GroupVersion)))
+	utilruntime.Must(v1alpha2.Install(scheme))
+	// v1alpha2 is preferred over the deprecated, spec-wrapped v1alpha1 for encoding.
+	utilruntime.Must(scheme.SetVersionPriority(
+		schema.GroupVersion(v1alpha2.GroupVersion),
+		schema.GroupVersion(v1alpha1.GroupVersion),
+	))
 }

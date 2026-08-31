@@ -38,9 +38,7 @@ var _ = Describe("Actuator", Ordered, func() {
 		featureGates   = make(map[featuregate.Feature]bool)
 		actuatorOpts   []actuator.Option
 		providerConfig = config.TraefikConfig{
-			Spec: config.TraefikConfigSpec{
-				Replicas: 1,
-			},
+			Replicas: 1,
 		}
 
 		projectNamespace = &corev1.Namespace{
@@ -271,10 +269,8 @@ var _ = Describe("Actuator", Ordered, func() {
 		It("should use default KubernetesIngress provider when not specified", func() {
 			// Create config without IngressProvider field
 			cfg := config.TraefikConfig{
-				Spec: config.TraefikConfigSpec{
-					Replicas: 2,
-					// IngressProvider not specified
-				},
+				Replicas: 2,
+				// IngressProvider not specified
 			}
 			cfgData, err := json.Marshal(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -291,10 +287,8 @@ var _ = Describe("Actuator", Ordered, func() {
 
 		It("should use KubernetesIngress provider when explicitly specified", func() {
 			cfg := config.TraefikConfig{
-				Spec: config.TraefikConfigSpec{
-					Replicas:        2,
-					IngressProvider: config.IngressProviderKubernetesIngress,
-				},
+				Replicas:        2,
+				IngressProvider: config.IngressProviderKubernetesIngress,
 			}
 			cfgData, err := json.Marshal(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -311,10 +305,8 @@ var _ = Describe("Actuator", Ordered, func() {
 
 		It("should use KubernetesIngressNGINX provider when specified", func() {
 			cfg := config.TraefikConfig{
-				Spec: config.TraefikConfigSpec{
-					Replicas:        2,
-					IngressProvider: config.IngressProviderKubernetesIngressNGINX,
-				},
+				Replicas:        2,
+				IngressProvider: config.IngressProviderKubernetesIngressNGINX,
 			}
 			cfgData, err := json.Marshal(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -331,10 +323,8 @@ var _ = Describe("Actuator", Ordered, func() {
 
 		It("should auto-derive ingress class for KubernetesIngressNGINX", func() {
 			cfg := config.TraefikConfig{
-				Spec: config.TraefikConfigSpec{
-					Replicas:        2,
-					IngressProvider: config.IngressProviderKubernetesIngressNGINX,
-				},
+				Replicas:        2,
+				IngressProvider: config.IngressProviderKubernetesIngressNGINX,
 			}
 			cfgData, err := json.Marshal(cfg)
 			Expect(err).NotTo(HaveOccurred())
@@ -351,10 +341,8 @@ var _ = Describe("Actuator", Ordered, func() {
 
 		It("should reconcile with all provider config options", func() {
 			cfg := config.TraefikConfig{
-				Spec: config.TraefikConfigSpec{
-					Replicas:        3,
-					IngressProvider: config.IngressProviderKubernetesIngressNGINX,
-				},
+				Replicas:        3,
+				IngressProvider: config.IngressProviderKubernetesIngressNGINX,
 			}
 			cfgData, err := json.Marshal(cfg)
 			Expect(err).NotTo(HaveOccurred())

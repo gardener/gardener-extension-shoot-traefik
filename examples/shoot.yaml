@@ -15,34 +15,33 @@ spec:
     # as a replacement for nginx-ingress-controller which is out of maintenance.
     - type: shoot-traefik
       providerConfig:
-        apiVersion: traefik.extensions.gardener.cloud/v1alpha1
+        apiVersion: traefik.extensions.gardener.cloud/v1alpha2
         kind: TraefikConfig
-        spec:
-          # Optional: Number of Traefik replicas
-          replicas: 2
-          
-          # Optional: Log level (default: "Info")
-          # Valid values: Debug, Info, Warn, Error, Fatal, Panic
-          # logLevel: Info
-          
-          # Optional: Ingress provider type (default: "KubernetesIngress")
-          # Valid values:
-          # - "KubernetesIngress": Standard Kubernetes Ingress provider (ingress class: "traefik")
-          # - "KubernetesIngressNGINX": NGINX-compatible provider with support for NGINX annotations (ingress class: "nginx")
-          #
-          # Use KubernetesIngressNGINX when migrating from NGINX Ingress Controller to maintain
-          # compatibility with existing NGINX-specific annotations.
-          # ingressProvider: KubernetesIngress
-          #
-          # Example for NGINX-compatible mode:
-          # ingressProvider: KubernetesIngressNGINX
-          #
-          # Optional: HTTP entrypoint behavior (default: "Enabled")
-          # Valid values:
-          # - "Enabled": expose Service port 80 and serve plain HTTP
-          # - "Redirect": expose Service port 80 and redirect HTTP to HTTPS (301)
-          # - "Disabled": do not expose Service port 80 (HTTPS only)
-          # httpEntrypoint: Enabled
+        # Optional: Number of Traefik replicas
+        replicas: 2
+
+        # Optional: Log level (default: "Info")
+        # Valid values: Debug, Info, Warn, Error, Fatal, Panic
+        # logLevel: Info
+
+        # Optional: Ingress provider type (default: "KubernetesIngress")
+        # Valid values:
+        # - "KubernetesIngress": Standard Kubernetes Ingress provider (ingress class: "traefik")
+        # - "KubernetesIngressNGINX": NGINX-compatible provider with support for NGINX annotations (ingress class: "nginx")
+        #
+        # Use KubernetesIngressNGINX when migrating from NGINX Ingress Controller to maintain
+        # compatibility with existing NGINX-specific annotations.
+        # ingressProvider: KubernetesIngress
+        #
+        # Example for NGINX-compatible mode:
+        # ingressProvider: KubernetesIngressNGINX
+        #
+        # Optional: HTTP entrypoint behavior (default: "Enabled")
+        # Valid values:
+        # - "Enabled": expose Service port 80 and serve plain HTTP
+        # - "Redirect": expose Service port 80 and redirect HTTP to HTTPS (301)
+        # - "Disabled": do not expose Service port 80 (HTTPS only)
+        # httpEntrypoint: Enabled
   cloudProfile:
     name: local
     kind: CloudProfile
