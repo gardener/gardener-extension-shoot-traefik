@@ -157,7 +157,7 @@ var _ = Describe("Shoot Validator", func() {
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
-					Addons: &gardencorev1beta1.Addons{
+					Addons: &gardencorev1beta1.Addons{ //nolint:staticcheck // SA1019: Spec.Addons is deprecated but still needs to be validated.
 						NginxIngress: &gardencorev1beta1.NginxIngress{
 							Addon: gardencorev1beta1.Addon{Enabled: true},
 						},
@@ -186,7 +186,7 @@ var _ = Describe("Shoot Validator", func() {
 				},
 				Spec: gardencorev1beta1.ShootSpec{
 					Purpose: &purpose,
-					Addons: &gardencorev1beta1.Addons{
+					Addons: &gardencorev1beta1.Addons{ //nolint:staticcheck // SA1019: Spec.Addons is deprecated but still needs to be validated.
 						NginxIngress: &gardencorev1beta1.NginxIngress{
 							Addon: gardencorev1beta1.Addon{Enabled: false},
 						},
