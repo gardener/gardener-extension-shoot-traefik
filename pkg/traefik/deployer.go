@@ -569,7 +569,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		"--metrics.prometheus=true",
 		"--metrics.prometheus.entrypoint=metrics",
 		ArgEntrypointWebAddress,
-		"--entrypoints.websecure.address=:8443",
+		ArgEntrypointWebSecureAddress,
 		"--entrypoints.metrics.address=:9100",
 		"--global.checknewversion=false",
 		fmt.Sprintf("--log.level=%s", d.config.LogLevel),
@@ -613,12 +613,12 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 	ports := []corev1.ContainerPort{
 		{
 			Name:          EntrypointWeb,
-			ContainerPort: 8000,
+			ContainerPort: 80,
 			Protocol:      corev1.ProtocolTCP,
 		},
 		{
 			Name:          EntrypointWebSecure,
-			ContainerPort: 8443,
+			ContainerPort: 443,
 			Protocol:      corev1.ProtocolTCP,
 		},
 		{
@@ -679,7 +679,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: PingPath,
-										Port: intstr.FromInt(8000),
+										Port: intstr.FromInt(80),
 									},
 								},
 								InitialDelaySeconds: 5,
@@ -691,7 +691,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: PingPath,
-										Port: intstr.FromInt(8000),
+										Port: intstr.FromInt(80),
 									},
 								},
 								PeriodSeconds:    10,
@@ -702,7 +702,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										Path: PingPath,
-										Port: intstr.FromInt(8000),
+										Port: intstr.FromInt(80),
 									},
 								},
 								PeriodSeconds:    5,
@@ -724,6 +724,7 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 								ReadOnlyRootFilesystem:   new(true),
 								Capabilities: &corev1.Capabilities{
 									Drop: []corev1.Capability{"ALL"},
+									Add:  []corev1.Capability{"NET_BIND_SERVICE"},
 								},
 							},
 						},
