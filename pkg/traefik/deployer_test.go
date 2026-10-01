@@ -207,7 +207,7 @@ func TestDeployment_IngressProvider(t *testing.T) {
 				"--ping=true",
 				"--metrics.prometheus=true",
 				ArgEntrypointWebAddress,
-				"--entrypoints.websecure.address=:8443",
+				ArgEntrypointWebSecureAddress,
 				"--global.checknewversion=false",
 			}
 			for _, commonArg := range commonArgs {
@@ -729,6 +729,55 @@ func TestIngressClassName(t *testing.T) {
 				t.Errorf("IngressClassName() = %q, want %q", got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestDeployment_PrivilegedPorts(t *testing.T) {
+	scheme := runtime.NewScheme()
+	client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+	imageVec := imagevector.ImageVector{
+		{
+			Name:       ImageName,
+			Repository: new("docker.io/library/traefik"),
+			Tag:        new("v3.6.10"),
+		},
+	}
+
+	deployer := NewDeployer(client, logr.Discard(), DefaultConfig(), imageVec)
+	deployment, err := deployer.deployment()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	args := deployment.Spec.Template.Spec.Containers[0].Args
+	for _, expectedArg := range []string{
+		ArgEntrypointWebAddress,
+		ArgEntrypointWebSecureAddress,
+	} {
+		if !slices.Contains(args, expectedArg) {
+			t.Errorf("expected arg %q not found in deployment args: %v", expectedArg, args)
+		}
+	}
+
+	ports := deployment.Spec.Template.Spec.Containers[0].Ports
+	portMap := make(map[string]int32, len(ports))
+	for _, p := range ports {
+		portMap[p.Name] = p.ContainerPort
+	}
+	if portMap[EntrypointWeb] != 80 {
+		t.Errorf("expected web container port 80, got %d", portMap[EntrypointWeb])
+	}
+	if portMap[EntrypointWebSecure] != 443 {
+		t.Errorf("expected websecure container port 443, got %d", portMap[EntrypointWebSecure])
+	}
+
+	sc := deployment.Spec.Template.Spec.Containers[0].SecurityContext
+	if sc == nil {
+		t.Fatal("expected security context but got nil")
+	}
+	if !slices.Contains(sc.Capabilities.Add, "NET_BIND_SERVICE") {
+		t.Error("expected NET_BIND_SERVICE capability to be added")
 	}
 }
 
