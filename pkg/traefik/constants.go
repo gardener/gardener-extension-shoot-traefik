@@ -89,6 +89,18 @@ const (
 
 	// ArgEntrypointWebAddress is the Traefik argument configuring the web entrypoint address.
 	ArgEntrypointWebAddress = "--entrypoints.web.address=:8000"
+
+	// AnnotationAWSProxyProtocol is the Service annotation that makes the AWS cloud-controller
+	// enable PROXY protocol on the (Classic) LoadBalancer backend. It is honored only on AWS
+	// infrastructure and ignored by other cloud providers.
+	AnnotationAWSProxyProtocol = "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"
+
+	// AnnotationAWSProxyProtocolValue is the value for the AWS proxy-protocol annotation.
+	// "*" enables PROXY protocol for all ports of the LoadBalancer.
+	AnnotationAWSProxyProtocolValue = "*"
+
+	// ProviderTypeAWS is the shoot provider type for which PROXY protocol is enabled by default.
+	ProviderTypeAWS = "aws"
 )
 
 // ValidLogLevels contains the set of log levels supported by Traefik.

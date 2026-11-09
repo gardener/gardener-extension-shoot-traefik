@@ -26,6 +26,7 @@ func Convert_v1alpha1_TraefikConfig_To_config_TraefikConfig(in *TraefikConfig, o
 	out.LogLevel = in.Spec.LogLevel
 	out.Dashboard = in.Spec.Dashboard
 	out.HTTPEntrypoint = config.HTTPEntrypointType(in.Spec.HTTPEntrypoint)
+	out.ProxyProtocol = convertProxyProtocolToInternal(in.Spec.ProxyProtocol)
 
 	return nil
 }
@@ -41,6 +42,43 @@ func Convert_config_TraefikConfig_To_v1alpha1_TraefikConfig(in *config.TraefikCo
 	out.Spec.LogLevel = in.LogLevel
 	out.Spec.Dashboard = in.Dashboard
 	out.Spec.HTTPEntrypoint = HTTPEntrypointType(in.HTTPEntrypoint)
+	out.Spec.ProxyProtocol = convertProxyProtocolToV1alpha1(in.ProxyProtocol)
 
 	return nil
+}
+
+// convertProxyProtocolToInternal deep-copies a v1alpha1 ProxyProtocolConfig into the internal type.
+func convertProxyProtocolToInternal(in *ProxyProtocolConfig) *config.ProxyProtocolConfig {
+	if in == nil {
+		return nil
+	}
+
+	out := &config.ProxyProtocolConfig{}
+	if in.Enabled != nil {
+		enabled := *in.Enabled
+		out.Enabled = &enabled
+	}
+	if in.TrustedIPs != nil {
+		out.TrustedIPs = append([]string(nil), in.TrustedIPs...)
+	}
+
+	return out
+}
+
+// convertProxyProtocolToV1alpha1 deep-copies an internal ProxyProtocolConfig into the v1alpha1 type.
+func convertProxyProtocolToV1alpha1(in *config.ProxyProtocolConfig) *ProxyProtocolConfig {
+	if in == nil {
+		return nil
+	}
+
+	out := &ProxyProtocolConfig{}
+	if in.Enabled != nil {
+		enabled := *in.Enabled
+		out.Enabled = &enabled
+	}
+	if in.TrustedIPs != nil {
+		out.TrustedIPs = append([]string(nil), in.TrustedIPs...)
+	}
+
+	return out
 }

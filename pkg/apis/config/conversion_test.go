@@ -75,4 +75,44 @@ var _ = Describe("TraefikConfig decoding", func() {
 		Expect(fromV1alpha1).To(Equal(expected))
 		Expect(fromV1alpha2).To(Equal(expected))
 	})
+
+	It("should decode proxyProtocol from both v1alpha1 (spec-wrapped) and v1alpha2 (flat) to the same internal config", func() {
+		v1alpha1Raw := []byte(`{
+			"apiVersion": "traefik.extensions.gardener.cloud/v1alpha1",
+			"kind": "TraefikConfig",
+			"spec": {
+				"proxyProtocol": {
+					"enabled": true,
+					"trustedIPs": ["10.250.0.0/16", "100.96.0.0/11"]
+				}
+			}
+		}`)
+
+		v1alpha2Raw := []byte(`{
+			"apiVersion": "traefik.extensions.gardener.cloud/v1alpha2",
+			"kind": "TraefikConfig",
+			"proxyProtocol": {
+				"enabled": true,
+				"trustedIPs": ["10.250.0.0/16", "100.96.0.0/11"]
+			}
+		}`)
+
+		var fromV1alpha1, fromV1alpha2 config.TraefikConfig
+		Expect(runtime.DecodeInto(decoder, v1alpha1Raw, &fromV1alpha1)).To(Succeed())
+		Expect(runtime.DecodeInto(decoder, v1alpha2Raw, &fromV1alpha2)).To(Succeed())
+
+		enabled := true
+		expected := config.TraefikConfig{
+			ProxyProtocol: &config.ProxyProtocolConfig{
+				Enabled:    &enabled,
+				TrustedIPs: []string{"10.250.0.0/16", "100.96.0.0/11"},
+			},
+		}
+
+		fromV1alpha1.TypeMeta = expected.TypeMeta
+		fromV1alpha2.TypeMeta = expected.TypeMeta
+
+		Expect(fromV1alpha1).To(Equal(expected))
+		Expect(fromV1alpha2).To(Equal(expected))
+	})
 })

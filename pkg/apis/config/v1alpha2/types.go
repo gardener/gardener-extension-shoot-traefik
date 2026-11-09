@@ -75,4 +75,23 @@ type TraefikConfig struct {
 	// - "Disabled": do not expose Service port 80 (HTTPS only).
 	// Defaults to "Enabled" if not specified.
 	HTTPEntrypoint HTTPEntrypointType `json:"httpEntrypoint,omitempty"`
+
+	// ProxyProtocol configures the PROXY protocol on the Traefik LoadBalancer so that the
+	// real client IP is preserved. This is required on AWS, where Gardener provisions a
+	// Classic Load Balancer with TCP (L4) listeners that discard the client IP unless PROXY
+	// protocol carries it. When unset, PROXY protocol is enabled automatically on AWS shoots
+	// (matching the retired nginx-ingress addon) and disabled on all other providers.
+	ProxyProtocol *ProxyProtocolConfig `json:"proxyProtocol,omitempty"`
+}
+
+// ProxyProtocolConfig configures PROXY protocol handling for the Traefik LoadBalancer.
+type ProxyProtocolConfig struct {
+	// Enabled explicitly turns PROXY protocol on or off. When nil, PROXY protocol defaults
+	// to enabled on AWS shoots and disabled on all other providers.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// TrustedIPs is the list of CIDRs (or bare IPs) Traefik trusts to send a PROXY protocol
+	// header on the web and websecure entrypoints. When empty, it defaults to the shoot's
+	// node and pod network CIDRs, since the LoadBalancer lives inside the shoot VPC.
+	TrustedIPs []string `json:"trustedIPs,omitempty"`
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
 	extensionsutil "github.com/gardener/gardener/extensions/pkg/util"
 	v1beta1helper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils/gardener"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -200,6 +201,7 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 	}
 
 	traefikConfig := traefik.DefaultConfig()
+	var proxyProtocolCfg *config.ProxyProtocolConfig
 	if ex.Spec.ProviderConfig != nil {
 		var cfg config.TraefikConfig
 		if err := runtime.DecodeInto(a.decoder, ex.Spec.ProviderConfig.Raw, &cfg); err != nil {
@@ -225,8 +227,14 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 				}
 				traefikConfig.HTTPEntrypoint = cfg.HTTPEntrypoint
 			}
+			proxyProtocolCfg = cfg.ProxyProtocol
 		}
 	}
+
+	// Resolve PROXY protocol: enabled by default on AWS (where the Classic LoadBalancer
+	// discards the client IP at L4), overridable via the providerConfig; trusted IPs default
+	// to the shoot's node and pod network CIDRs.
+	traefikConfig.ProxyProtocolEnabled, traefikConfig.ProxyProtocolTrustedIPs = resolveProxyProtocol(proxyProtocolCfg, cluster.Shoot)
 
 	deployer := traefik.NewDeployer(a.client, logger, traefikConfig, a.imageVector)
 	if err := deployer.Deploy(ctx, clusterName); err != nil {
@@ -241,6 +249,48 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 	logger.Info("successfully reconciled traefik extension", "cluster", clusterName)
 
 	return nil
+}
+
+// resolveProxyProtocol determines whether PROXY protocol should be enabled and which source
+// ranges Traefik should trust to send a PROXY header.
+//
+// Enablement follows the retired nginx-ingress addon: unless the shoot owner sets
+// proxyProtocol.enabled explicitly, PROXY protocol is enabled on AWS (whose Classic
+// LoadBalancer discards the client IP at L4) and disabled on all other providers.
+//
+// Trusted IPs default to the shoot's node and pod network CIDRs, since the LoadBalancer lives
+// inside the shoot VPC; the owner may override them via proxyProtocol.trustedIPs.
+func resolveProxyProtocol(cfg *config.ProxyProtocolConfig, shoot *gardencorev1beta1.Shoot) (bool, []string) {
+	enabled := shoot.Spec.Provider.Type == traefik.ProviderTypeAWS
+	if cfg != nil && cfg.Enabled != nil {
+		enabled = *cfg.Enabled
+	}
+
+	if !enabled {
+		return false, nil
+	}
+
+	if cfg != nil && len(cfg.TrustedIPs) > 0 {
+		return true, cfg.TrustedIPs
+	}
+
+	return true, shootNetworkCIDRs(shoot)
+}
+
+// shootNetworkCIDRs returns the shoot's node and pod network CIDRs (skipping any that are unset).
+func shootNetworkCIDRs(shoot *gardencorev1beta1.Shoot) []string {
+	var cidrs []string
+	if shoot.Spec.Networking == nil {
+		return cidrs
+	}
+	if shoot.Spec.Networking.Nodes != nil {
+		cidrs = append(cidrs, *shoot.Spec.Networking.Nodes)
+	}
+	if shoot.Spec.Networking.Pods != nil {
+		cidrs = append(cidrs, *shoot.Spec.Networking.Pods)
+	}
+
+	return cidrs
 }
 
 // reconcileDNSRecord reads the Traefik LoadBalancer address from the shoot

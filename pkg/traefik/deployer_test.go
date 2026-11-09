@@ -521,6 +521,119 @@ func TestService_HTTPEntrypoint(t *testing.T) {
 	}
 }
 
+func TestService_ProxyProtocol(t *testing.T) {
+	tests := []struct {
+		name             string
+		enabled          bool
+		expectAnnotation bool
+	}{
+		{
+			name:             "enabled adds AWS proxy-protocol annotation",
+			enabled:          true,
+			expectAnnotation: true,
+		},
+		{
+			name:             "disabled omits AWS proxy-protocol annotation",
+			enabled:          false,
+			expectAnnotation: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			deployer := NewDeployer(client, logr.Discard(), Config{ProxyProtocolEnabled: tt.enabled}, imagevector.ImageVector{})
+			svc := deployer.service()
+
+			val, ok := svc.Annotations[AnnotationAWSProxyProtocol]
+			if tt.expectAnnotation {
+				if !ok || val != AnnotationAWSProxyProtocolValue {
+					t.Errorf("expected annotation %s=%s, got annotations: %v", AnnotationAWSProxyProtocol, AnnotationAWSProxyProtocolValue, svc.Annotations)
+				}
+			} else if ok {
+				t.Errorf("unexpected proxy-protocol annotation present: %v", svc.Annotations)
+			}
+		})
+	}
+}
+
+func TestDeployment_ProxyProtocol(t *testing.T) {
+	imageVec := imagevector.ImageVector{
+		{
+			Name:       ImageName,
+			Repository: new("docker.io/library/traefik"),
+			Tag:        new("v3.6.10"),
+		},
+	}
+
+	tests := []struct {
+		name            string
+		config          Config
+		expectedArgs    []string
+		notExpectedArgs []string
+	}{
+		{
+			name: "enabled with trustedIPs adds both entrypoint args",
+			config: Config{
+				ProxyProtocolEnabled:    true,
+				ProxyProtocolTrustedIPs: []string{"10.250.0.0/16", "100.96.0.0/11"},
+			},
+			expectedArgs: []string{
+				"--entrypoints.web.proxyProtocol.trustedIPs=10.250.0.0/16,100.96.0.0/11",
+				"--entrypoints.websecure.proxyProtocol.trustedIPs=10.250.0.0/16,100.96.0.0/11",
+			},
+		},
+		{
+			name:   "disabled adds no proxyProtocol args",
+			config: Config{ProxyProtocolEnabled: false},
+			notExpectedArgs: []string{
+				"proxyProtocol.trustedIPs",
+			},
+		},
+		{
+			name: "enabled with empty trustedIPs still adds args with empty value",
+			config: Config{
+				ProxyProtocolEnabled:    true,
+				ProxyProtocolTrustedIPs: nil,
+			},
+			expectedArgs: []string{
+				"--entrypoints.web.proxyProtocol.trustedIPs=",
+				"--entrypoints.websecure.proxyProtocol.trustedIPs=",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			client := fake.NewClientBuilder().WithScheme(scheme).Build()
+
+			deployer := NewDeployer(client, logr.Discard(), tt.config, imageVec)
+			deployment, err := deployer.deployment()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+
+			for _, expectedArg := range tt.expectedArgs {
+				if !slices.Contains(args, expectedArg) {
+					t.Errorf("expected arg %q not found in deployment args: %v", expectedArg, args)
+				}
+			}
+			for _, notExpectedArg := range tt.notExpectedArgs {
+				for _, arg := range args {
+					if strings.Contains(arg, notExpectedArg) {
+						t.Errorf("unexpected arg containing %q found in deployment args: %v", notExpectedArg, args)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestClusterRole_RBAC_Permissions(t *testing.T) {
 	tests := []struct {
 		name                 string

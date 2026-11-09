@@ -8,6 +8,7 @@ package validator
 import (
 	"context"
 	"fmt"
+	"net"
 
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -138,6 +139,16 @@ func (v *shootValidator) validateProviderConfig(ext *gardencorev1beta1.Extension
 
 	if cfg.HTTPEntrypoint != "" && !traefik.ValidHTTPEntrypoints.Has(cfg.HTTPEntrypoint) {
 		return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of %v", cfg.HTTPEntrypoint, sets.List(traefik.ValidHTTPEntrypoints))
+	}
+
+	if cfg.ProxyProtocol != nil {
+		for _, ip := range cfg.ProxyProtocol.TrustedIPs {
+			if _, _, err := net.ParseCIDR(ip); err != nil {
+				if net.ParseIP(ip) == nil {
+					return fmt.Errorf("invalid traefik proxyProtocol.trustedIPs entry %q: must be a valid CIDR or IP address", ip)
+				}
+			}
+		}
 	}
 
 	return nil

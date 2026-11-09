@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"strings"
 	"time"
 
 	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/api/extensions/v1alpha1/helper"
@@ -95,6 +96,12 @@ type Config struct {
 	Dashboard bool
 	// HTTPEntrypoint controls how the LoadBalancer Service handles plain HTTP (port 80).
 	HTTPEntrypoint config.HTTPEntrypointType
+	// ProxyProtocolEnabled enables PROXY protocol on the LoadBalancer and the web/websecure
+	// entrypoints so that the real client IP is preserved. Required on AWS Classic LoadBalancers.
+	ProxyProtocolEnabled bool
+	// ProxyProtocolTrustedIPs is the list of CIDRs (or bare IPs) Traefik trusts to send a
+	// PROXY protocol header. Only used when ProxyProtocolEnabled is true.
+	ProxyProtocolTrustedIPs []string
 }
 
 // DefaultConfig returns the default configuration for Traefik.
@@ -589,6 +596,17 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 		)
 	}
 
+	// When PROXY protocol is enabled (e.g. on AWS Classic LoadBalancers, which strip the client
+	// IP at L4), trust the configured source ranges to send a PROXY header on both entrypoints.
+	// Both container entrypoints (web :8000, websecure :8443) always exist, so configure both.
+	if d.config.ProxyProtocolEnabled {
+		trustedIPs := strings.Join(d.config.ProxyProtocolTrustedIPs, ",")
+		args = append(args,
+			fmt.Sprintf("--entrypoints.%s.proxyProtocol.trustedIPs=%s", EntrypointWeb, trustedIPs),
+			fmt.Sprintf("--entrypoints.%s.proxyProtocol.trustedIPs=%s", EntrypointWebSecure, trustedIPs),
+		)
+	}
+
 	ingressClass := d.config.IngressClassName()
 
 	if d.config.IngressProvider == config.IngressProviderKubernetesIngress || d.config.IngressProvider == "" {
@@ -776,8 +794,9 @@ func (d *Deployer) service() *corev1.Service {
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DeploymentName,
-			Namespace: Namespace,
+			Name:        DeploymentName,
+			Namespace:   Namespace,
+			Annotations: d.serviceAnnotations(),
 			Labels: map[string]string{
 				LabelName:      DeploymentName,
 				LabelInstance:  DeploymentName,
@@ -793,6 +812,19 @@ func (d *Deployer) service() *corev1.Service {
 			},
 			Ports: ports,
 		},
+	}
+}
+
+// serviceAnnotations returns the annotations for the Traefik LoadBalancer Service.
+// When PROXY protocol is enabled it adds the AWS proxy-protocol annotation, which the AWS
+// cloud-controller honors to enable PROXY protocol on the Classic LoadBalancer backend.
+func (d *Deployer) serviceAnnotations() map[string]string {
+	if !d.config.ProxyProtocolEnabled {
+		return nil
+	}
+
+	return map[string]string{
+		AnnotationAWSProxyProtocol: AnnotationAWSProxyProtocolValue,
 	}
 }
 

@@ -278,6 +278,21 @@ var _ = Describe("Shoot Validator", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("logLevel"))
 		})
+
+		It("should allow valid proxyProtocol.trustedIPs (CIDR and bare IP)", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha2","kind":"TraefikConfig","proxyProtocol":{"enabled":true,"trustedIPs":["10.250.0.0/16","192.0.2.1"]}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should deny an invalid proxyProtocol.trustedIPs entry", func() {
+			shoot := newShootWithProviderConfig(`{"apiVersion":"traefik.extensions.gardener.cloud/v1alpha2","kind":"TraefikConfig","proxyProtocol":{"trustedIPs":["not-an-ip"]}}`)
+
+			err := validator.Validate(context.Background(), shoot, nil)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("trustedIPs"))
+		})
 	})
 
 	Context("when shoot does not have traefik extension", func() {
