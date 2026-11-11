@@ -1,9 +1,10 @@
 name: build-and-test
 on:
+  # Only pushes to the default branch publish credentialed snapshot
+  # artifacts; other branches are validated through pull_request without publish credentials.
   push:
-    branches-ignore:
-      - 'renovate/**'
-      - 'dependabot/**'
+    branches:
+      - main
 
   pull_request:
 
@@ -12,7 +13,6 @@ on:
       mode:
         type: string
         required: true
-        default: snapshot
         description: |
           the mode to use. either `snapshot` or `release`. Will affect effective version, as well
           as target-oci-registry.

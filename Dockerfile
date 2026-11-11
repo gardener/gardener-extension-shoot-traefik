@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.27.4 AS builder
+FROM golang:1.27.4@sha256:08bcb99a38f85a265f9a93d1d3323e2440eec333380f3ea26ee0dec9264bb41c AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -23,7 +23,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o bi
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot AS gardener-extension-shoot-traefik
+FROM gcr.io/distroless/static:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329 AS gardener-extension-shoot-traefik
 
 # Args and labels
 ARG BUILD_DATE
