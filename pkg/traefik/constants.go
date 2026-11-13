@@ -84,11 +84,14 @@ const (
 	// EntrypointWeb is the name of the plain-HTTP entrypoint and its Service/container port.
 	EntrypointWeb = "web"
 
+	// ArgEntrypointWebAddress is the Traefik argument configuring the web entrypoint address.
+	ArgEntrypointWebAddress = "--entrypoints.web.address=:8000"
+
 	// EntrypointWebSecure is the name of the HTTPS entrypoint and its Service/container port.
 	EntrypointWebSecure = "websecure"
 
-	// ArgEntrypointWebAddress is the Traefik argument configuring the web entrypoint address.
-	ArgEntrypointWebAddress = "--entrypoints.web.address=:8000"
+	// ArgEntrypointWebSecureAddress is the Traefik argument configuring the websecure entrypoint address.
+	ArgEntrypointWebSecureAddress = "--entrypoints.websecure.address=:8443"
 
 	// AnnotationAWSProxyProtocol is the Service annotation that makes the AWS cloud-controller
 	// enable PROXY protocol on the (Classic) LoadBalancer backend. It is honored only on AWS
