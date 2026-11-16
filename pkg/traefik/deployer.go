@@ -248,9 +248,10 @@ func (d *Deployer) DeployDNSRecord(ctx context.Context, namespace, lbAddress, dn
 		return fmt.Errorf("failed to encode DNSRecord: %w", err)
 	}
 
-	if err := managedresources.CreateForSeed(ctx, d.client, namespace, SeedManagedResourceName, false, map[string][]byte{
+	err = managedresources.CreateForSeed(ctx, d.client, namespace, SeedManagedResourceName, false, map[string][]byte{
 		"dnsrecord.yaml": dnsRecordData,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("failed to deploy seed ManagedResource for DNSRecord: %w", err)
 	}
 
