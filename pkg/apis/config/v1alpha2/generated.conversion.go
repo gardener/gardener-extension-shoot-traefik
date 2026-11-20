@@ -68,6 +68,7 @@ func autoConvert_v1alpha2_TraefikConfig_To_config_TraefikConfig(in *TraefikConfi
 	out.IngressProvider = config.IngressProviderType(in.IngressProvider)
 	out.LogLevel = in.LogLevel
 	out.Dashboard = in.Dashboard
+	out.AllowCrossNamespace = in.AllowCrossNamespace
 	out.HTTPEntrypoint = config.HTTPEntrypointType(in.HTTPEntrypoint)
 	out.ProxyProtocol = (*config.ProxyProtocolConfig)(unsafe.Pointer(in.ProxyProtocol))
 	return nil
@@ -83,6 +84,7 @@ func autoConvert_config_TraefikConfig_To_v1alpha2_TraefikConfig(in *config.Traef
 	out.IngressProvider = IngressProviderType(in.IngressProvider)
 	out.LogLevel = in.LogLevel
 	out.Dashboard = in.Dashboard
+	out.AllowCrossNamespace = in.AllowCrossNamespace
 	out.HTTPEntrypoint = HTTPEntrypointType(in.HTTPEntrypoint)
 	out.ProxyProtocol = (*ProxyProtocolConfig)(unsafe.Pointer(in.ProxyProtocol))
 	return nil

@@ -34,6 +34,15 @@ rules:
   - get
   - list
   - watch
+# Mutating verbs are scoped to the single DNSRecord this extension owns, so a compromised
+# extension pod cannot confirm-and-delete arbitrary shoots' DNSRecords on a shared seed.
+- apiGroups:
+  - extensions.gardener.cloud
+  resources:
+  - dnsrecords
+  resourceNames:
+  - extension-traefik-ingress-dns
+  verbs:
   - patch
   - delete
 - apiGroups:
@@ -62,6 +71,16 @@ rules:
   - list
   - watch
   - create
+# Mutating verbs are scoped to the ManagedResources this extension owns, so a compromised
+# extension pod cannot modify or delete other extensions' ManagedResources on a shared seed.
+- apiGroups:
+  - resources.gardener.cloud
+  resources:
+  - managedresources
+  resourceNames:
+  - extension-traefik
+  - extension-traefik-ingress-dns
+  verbs:
   - update
   - patch
   - delete

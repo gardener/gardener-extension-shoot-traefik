@@ -25,6 +25,7 @@ func Convert_v1alpha1_TraefikConfig_To_config_TraefikConfig(in *TraefikConfig, o
 	out.IngressProvider = config.IngressProviderType(in.Spec.IngressProvider)
 	out.LogLevel = in.Spec.LogLevel
 	out.Dashboard = in.Spec.Dashboard
+	out.AllowCrossNamespace = in.Spec.AllowCrossNamespace
 	out.HTTPEntrypoint = config.HTTPEntrypointType(in.Spec.HTTPEntrypoint)
 	out.ProxyProtocol = convertProxyProtocolToInternal(in.Spec.ProxyProtocol)
 
@@ -41,6 +42,7 @@ func Convert_config_TraefikConfig_To_v1alpha1_TraefikConfig(in *config.TraefikCo
 	out.Spec.IngressProvider = IngressProviderType(in.IngressProvider)
 	out.Spec.LogLevel = in.LogLevel
 	out.Spec.Dashboard = in.Dashboard
+	out.Spec.AllowCrossNamespace = in.AllowCrossNamespace
 	out.Spec.HTTPEntrypoint = HTTPEntrypointType(in.HTTPEntrypoint)
 	out.Spec.ProxyProtocol = convertProxyProtocolToV1alpha1(in.ProxyProtocol)
 

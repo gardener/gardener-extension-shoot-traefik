@@ -73,6 +73,7 @@ func autoConvert_config_TraefikConfig_To_v1alpha1_TraefikConfig(in *config.Traef
 	// WARNING: in.IngressProvider requires manual conversion: does not exist in peer-type
 	// WARNING: in.LogLevel requires manual conversion: does not exist in peer-type
 	// WARNING: in.Dashboard requires manual conversion: does not exist in peer-type
+	// WARNING: in.AllowCrossNamespace requires manual conversion: does not exist in peer-type
 	// WARNING: in.HTTPEntrypoint requires manual conversion: does not exist in peer-type
 	// WARNING: in.ProxyProtocol requires manual conversion: does not exist in peer-type
 	return nil

@@ -94,6 +94,9 @@ type Config struct {
 	LogLevel string
 	// Dashboard enables the Traefik dashboard on port 9000.
 	Dashboard bool
+	// AllowCrossNamespace permits Traefik CRD objects to reference resources in other namespaces.
+	// Unsafe on shared/multi-tenant clusters; defaults to false.
+	AllowCrossNamespace bool
 	// HTTPEntrypoint controls how the LoadBalancer Service handles plain HTTP (port 80).
 	HTTPEntrypoint config.HTTPEntrypointType
 	// ProxyProtocolEnabled enables PROXY protocol on the LoadBalancer and the web/websecure
@@ -568,9 +571,12 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 	}
 	image := img.String()
 
-	// Configure Traefik arguments based on the selected provider
+	// Configure Traefik arguments based on the selected provider.
+	// Note: --api.insecure is intentionally never set. It would serve the full, unauthenticated
+	// Traefik API on the dedicated :9000 entrypoint, which combined with the pod-network ingress
+	// rule would disclose every namespace's routing and middleware (including basicAuth hashes) to
+	// any workload. The dashboard is served through --api.dashboard and reached via port-forward.
 	args := []string{
-		fmt.Sprintf("--api.insecure=%t", d.config.Dashboard),
 		fmt.Sprintf("--api.dashboard=%t", d.config.Dashboard),
 		"--ping=true",
 		"--ping.entrypoint=web",
@@ -616,8 +622,13 @@ func (d *Deployer) deployment() (*appsv1.Deployment, error) {
 			fmt.Sprintf("--providers.kubernetesingress.ingressclass=%s", ingressClass),
 			"--providers.kubernetesingress.ingressendpoint.publishedservice=kube-system/traefik",
 			"--providers.kubernetescrd=true",
-			"--providers.kubernetescrd.allowcrossnamespace=true",
 		)
+		// Cross-namespace references void namespace isolation (a principal in one namespace can
+		// reach services, borrow mTLS material from, or bypass the middlewares of another). Keep
+		// Traefik's upstream-safe default (false) unless explicitly opted in.
+		if d.config.AllowCrossNamespace {
+			args = append(args, "--providers.kubernetescrd.allowcrossnamespace=true")
+		}
 	}
 
 	if d.config.IngressProvider == config.IngressProviderKubernetesIngressNGINX {
@@ -892,8 +903,11 @@ func (d *Deployer) networkPolicy() *networkingv1.NetworkPolicy {
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
 				{
-					// Allow all ingress traffic to Traefik from anywhere
-					// This is required for the LoadBalancer to reach Traefik pods
+					// Allow ingress only to the serving entrypoints: web (8000), websecure (8443),
+					// and metrics (9100). The dashboard/API entrypoint (9000) is deliberately NOT
+					// exposed on the pod network; it is reached via kubectl port-forward, which
+					// rides the kubelet path and is unaffected by this NetworkPolicy.
+					Ports: ingressPorts(8000, 8443, 9100),
 				},
 			},
 			// Allow all egress traffic from Traefik to anywhere
@@ -916,6 +930,18 @@ func (d *Deployer) networkPolicy() *networkingv1.NetworkPolicy {
 			},
 		},
 	}
+}
+
+// ingressPorts builds a set of TCP NetworkPolicyPorts for the given port numbers.
+func ingressPorts(ports ...int32) []networkingv1.NetworkPolicyPort {
+	tcp := corev1.ProtocolTCP
+	result := make([]networkingv1.NetworkPolicyPort, 0, len(ports))
+	for _, p := range ports {
+		port := intstr.FromInt32(p)
+		result = append(result, networkingv1.NetworkPolicyPort{Protocol: &tcp, Port: &port})
+	}
+
+	return result
 }
 
 func (d *Deployer) podDisruptionBudget() *policyv1.PodDisruptionBudget {

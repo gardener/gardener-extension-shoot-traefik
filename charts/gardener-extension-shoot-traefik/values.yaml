@@ -39,9 +39,10 @@ extension:
   # Health settings
   health:
     bind_address: ":8081"
-  # pprof settings. Set this to 0 in order to disable pprof.
+  # pprof settings. pprof is disabled by default ("0"); set a bind address
+  # (e.g. "127.0.0.1:9090") to enable it for debugging.
   pprof:
-    bind_address: ":9090"
+    bind_address: "0"
   # Heartbeat settings
   heartbeat:
     renew_interval: 30s

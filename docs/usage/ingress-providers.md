@@ -141,10 +141,10 @@ spec:
 
 ## Dashboard
 
-The `dashboard` field enables the Traefik dashboard, which exposes the live routing configuration and diagnostics on port `9000`. The dashboard is only reachable from inside the cluster; access it through `kubectl port-forward`:
+The `dashboard` field enables the Traefik dashboard, which exposes the live routing configuration and diagnostics on port `9000`. The dashboard is reachable only via `kubectl port-forward` to a Traefik pod (port `9000` is not exposed on the pod network and the `traefik` Service does not publish it):
 
 ```bash
-kubectl -n kube-system port-forward svc/traefik 9000:9000
+kubectl -n kube-system port-forward deploy/traefik 9000:9000
 # then open http://localhost:9000/dashboard/
 ```
 
@@ -232,6 +232,7 @@ All fields live at the top level of `providerConfig` (`apiVersion: traefik.exten
 | `replicas` | int32 | `2` | Number of Traefik pods in the shoot. |
 | `logLevel` | string | `Info` | Traefik log verbosity. One of `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic`. |
 | `dashboard` | bool | `false` | Enables the Traefik dashboard on port `9000`. Not recommended for production-like clusters. |
+| `allowCrossNamespace` | bool | `false` | Permits Traefik CRD objects (e.g. `IngressRoute`) to reference services, middlewares, serversTransports, and TLS options in **other** namespaces. Unsafe on shared or multi-tenant clusters, since it voids namespace isolation; only enable it when every namespace is operated by the same trusted party. |
 | `httpEntrypoint` | string | `Enabled` | Controls the LoadBalancer HTTP (port `80`) behavior. One of `Enabled` (serve HTTP), `Redirect` (301 HTTP→HTTPS), or `Disabled` (no port 80). |
 | `proxyProtocol.enabled` | bool | `true` on AWS, else `false` | Enables PROXY protocol so the real client IP is preserved. Defaults to enabled on AWS (Classic L4 LoadBalancer), disabled elsewhere. |
 | `proxyProtocol.trustedIPs` | []string | shoot node + pod CIDRs | CIDRs or IPs Traefik trusts to send a PROXY header on the `web`/`websecure` entrypoints. |

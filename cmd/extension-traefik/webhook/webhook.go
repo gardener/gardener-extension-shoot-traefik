@@ -17,6 +17,7 @@ import (
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	extensionscmdwebhook "github.com/gardener/gardener/extensions/pkg/webhook/cmd"
 	gardencoreinstall "github.com/gardener/gardener/pkg/apis/core/install"
+	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	gardenerhealthz "github.com/gardener/gardener/pkg/healthz"
 	glogger "github.com/gardener/gardener/pkg/logger"
 	"github.com/go-logr/logr"
@@ -117,7 +118,10 @@ func (f *flags) getManager(ctx context.Context) (ctrl.Manager, error) {
 	// package.
 	f.sourceCluster = sourceCluster
 
-	targetClusterConfig, err := clientcmd.BuildConfigFromFlags("", f.gardenKubeconfig)
+	// Load the garden kubeconfig with the hardened allowlist loader: it rejects exec, auth-provider,
+	// and certificate/token file-reference credential forms (only an in-kubeconfig tokenFile is
+	// allowed), so a tampered kubeconfig cannot redirect pod-local file contents as credentials.
+	targetClusterConfig, err := gardenerkubernetes.RESTConfigFromKubeconfigFile(f.gardenKubeconfig, gardenerkubernetes.AuthTokenFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load garden cluster config: %w", err)
 	}

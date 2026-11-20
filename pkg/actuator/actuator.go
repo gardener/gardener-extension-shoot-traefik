@@ -221,6 +221,7 @@ func (a *Actuator) Reconcile(ctx context.Context, logger logr.Logger, ex *extens
 				traefikConfig.LogLevel = cfg.LogLevel
 			}
 			traefikConfig.Dashboard = cfg.Dashboard
+			traefikConfig.AllowCrossNamespace = cfg.AllowCrossNamespace
 			if cfg.HTTPEntrypoint != "" {
 				if !traefik.ValidHTTPEntrypoints.Has(cfg.HTTPEntrypoint) {
 					return fmt.Errorf("invalid traefik httpEntrypoint %q: must be one of Enabled, Redirect, Disabled", cfg.HTTPEntrypoint)

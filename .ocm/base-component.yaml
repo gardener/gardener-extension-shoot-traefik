@@ -4,7 +4,8 @@ main-source:
       value:
         policy: skip
         comment: |
-          we use gosec for sast scanning. See attached log.
+          we use gosec for sast scanning, which runs and gates every release
+          in the build-and-test workflow (make sast-report under set -eu).
 
 labels:
   - name: cloud.gardener.cnudie/responsibles

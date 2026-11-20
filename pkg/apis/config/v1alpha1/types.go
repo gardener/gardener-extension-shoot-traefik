@@ -60,6 +60,15 @@ type TraefikConfigSpec struct {
 	// Defaults to false if not specified.
 	Dashboard bool `json:"dashboard,omitempty"`
 
+	// AllowCrossNamespace permits Traefik CRD objects (e.g. IngressRoute) to reference resources
+	// such as services, middlewares, serversTransports, and TLS options in other namespaces.
+	// This is unsafe on shared or multi-tenant clusters, because it voids namespace isolation: a
+	// principal with access to one namespace can route to, borrow mTLS material from, or bypass the
+	// auth middlewares of workloads in sibling namespaces. Keep this disabled unless every namespace
+	// is operated by the same trusted party.
+	// Defaults to false if not specified.
+	AllowCrossNamespace bool `json:"allowCrossNamespace,omitempty"`
+
 	// HTTPEntrypoint controls how the Traefik LoadBalancer handles plain HTTP (port 80).
 	// Valid values are:
 	// - "Enabled" (default): expose Service port 80 and serve plain HTTP.
